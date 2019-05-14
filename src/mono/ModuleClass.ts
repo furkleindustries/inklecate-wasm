@@ -98,6 +98,39 @@ export class ModuleClass extends BaseModule {
         this.preInit.pop()()
       }
     }
+
+    [
+      '___errno_location',
+      '_emscripten_replace_memory',
+      '_free',
+      '_htonl',
+      '_htons',
+      '_malloc',
+      '_memalign',
+      '_memset',
+      '_mono_background_exec',
+      '_mono_print_method_from_ip',
+      '_mono_set_timeout_exec',
+      '_mono_wasm_assembly_find_class',
+      '_mono_wasm_assembly_find_method',
+      '_mono_wasm_assembly_load',
+      '_mono_wasm_current_bp_id',
+      '_mono_wasm_enum_frames',
+      '_mono_wasm_get_var_info',
+      '_mono_wasm_invoke_method',
+      '_mono_wasm_load_runtime',
+      '_mono_wasm_set_breakpoint',
+      '_mono_wasm_string_from_js',
+      '_mono_wasm_string_get_utf8',
+      '_ntohs',
+      '_wasm_get_stack_base',
+      '_wasm_get_stack_size',
+      'dynCall_v',
+      'dynCall_vi',
+      'stackAlloc',
+      'stackSave',
+      'stackRestore',
+    ].forEach((asmKey) => this[asmKey] = (this.asm as any)[asmKey]);
   }
 
   public asm = (global: any, env: any, providedBuffer: Buffer) => {
