@@ -45,7 +45,7 @@ export const enlargeMemory = () => {
   const replacement = Module.reallocBuffer(totalMemory);
   if (!replacement || replacement.byteLength !== totalMemory) {
     setTotalMemory(OLD_TOTAL_MEMORY);
-    return false
+    return false;
   }
 
   updateGlobalBuffer(replacement);

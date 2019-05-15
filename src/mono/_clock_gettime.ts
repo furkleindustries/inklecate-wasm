@@ -8,8 +8,8 @@ import {
   _emscripten_get_now_is_monotonic,
 } from './emscripten/_emscripten_get_now_is_monotonic';
 import {
-  errnoCodes,
-} from './errors/errnoCodes';
+  ErrorNumberCodes,
+} from './errors/ErrorNumberCodes';
 import {
   getHeap,
 } from './heaps/heaps';
@@ -21,7 +21,7 @@ export const _clock_gettime = (clk_id: number, tp: number) => {
   } else if (clk_id === 1 && _emscripten_get_now_is_monotonic()) {
     now = _emscripten_get_now('No message. Will add later.');
   } else {
-    ___setErrNo(errnoCodes.EINVAL);
+    ___setErrNo(ErrorNumberCodes.EINVAL);
     return -1;
   }
 

@@ -5,16 +5,22 @@ import {
   warn,
 } from 'colorful-logging';
 import {
+  doNativeWasm,
+} from './wasmJs/doNativeWasm';
+import {
   EnvironmentTypes,
 } from './EnvironmentTypes';
 import * as emscriptenFuncs from './emscripten';
+import {
+  FS,
+} from './FS';
 import fs from 'fs-extra';
+import {
+  getGlobalValue,
+} from './getGlobalValue';
 import {
   getEnvType,
 } from './getEnvVars';
-import {
-  getHeap,
-} from './heaps/heaps';
 import {
   getPointer,
 } from './pointers/pointers';
@@ -27,19 +33,15 @@ import {
   assert,
   assertValid,
 } from 'ts-assertions';
+import {
+  wasmReallocBuffer,
+} from './wasmJs/wasmReallocBuffer';
 
 import inkCompiler from './bin/Release/netcoreapp3.0/ink_compiler.dll';
 import inkEngineRuntime from './bin/Release/netcoreapp3.0/ink-engine-runtime.dll';
 import inklecateWasm from './bin/Release/netcoreapp3.0/dist/managed/inklecate_wasm.dll';
-import { doNativeWasm } from './wasmJs/doNativeWasm';
-import { wasmReallocBuffer } from './wasmJs/wasmReallocBuffer';
 
-export const BaseModule: any = 
-  // @ts-ignore
-  typeof (this || global || window).Module === 'object' ?
-    /* @ts-ignore */
-    ((this || global || window) as any).Module :
-    {};
+export const BaseModule = getGlobalValue('Module') || {};
 
 const argv = (process || {}).argv || [];
 
@@ -322,7 +324,7 @@ export class ModuleClass extends BaseModule {
     document.title = title;
   };
 
-  public readonly print = (text: string, ...args: any[]) => {
+  public readonly print = (text?: string, ...args: any[]) => {
     if (typeof console !== 'undefined') {
       log(text, ...args);
     } else if (typeof print !== 'undefined') {
@@ -331,7 +333,7 @@ export class ModuleClass extends BaseModule {
     }
   };
 
-  public readonly printErr = (text: string, ...args: any[]) => (
+  public readonly printErr = (text?: string, ...args: any[]) => (
     (() => {
       // @ts-ignore
       if (typeof printErr !== 'undefined') {
@@ -365,4 +367,7 @@ export class ModuleClass extends BaseModule {
       `abort(${what}). Build with -s ASSERTIONS=1 for more info.`
     );
   };
+
+  public readonly FS_createPath = FS.createPath;
+  public readonly FS_createDataFile = FS.createDataFile;
 }

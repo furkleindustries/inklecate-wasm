@@ -2,14 +2,21 @@ const utf8Decoder = typeof TextDecoder !== 'undefined' ?
   new TextDecoder('utf8') :
   undefined;
 
-export const utf8ArrayToString = (u8Array: Uint8Array, id: number) => {
+export const utf8ArrayToString = (u8Array: number[] | Uint8Array, id: number) => {
   let endPtr = id;
   while (u8Array[endPtr]) {
     endPtr += 1;
   }
 
-  if (endPtr - id > 16 && u8Array.subarray && utf8Decoder) {
-    return utf8Decoder.decode(u8Array.subarray(id, endPtr))
+  if (endPtr - id > 16 &&
+      // @ts-ignore
+      typeof u8Array.subarray === 'function' &&
+      utf8Decoder)
+  {
+    return utf8Decoder.decode(
+      // @ts-ignore
+      u8Array.subarray(id, endPtr),
+    );
   } else {
     let u0;
     let u1;

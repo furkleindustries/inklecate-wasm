@@ -1,6 +1,6 @@
 export const stringToUtf8Array = (
   str: string,
-  outU8Array: Uint8Array,
+  outU8Array: Uint8Array | number[],
   outId: number,
   maxBytesToWrite: number,
 ) => {

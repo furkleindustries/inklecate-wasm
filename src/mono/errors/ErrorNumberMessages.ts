@@ -1,4 +1,4 @@
-export const errnoMessages = {
+export const ErrorNumberMessages = {
   0: 'Success',
   1: 'Not super-user',
   2: 'No such file or directory',
