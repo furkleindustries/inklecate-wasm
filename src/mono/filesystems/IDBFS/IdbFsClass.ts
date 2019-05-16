@@ -1,15 +1,15 @@
 import {
   FS,
-} from './FS';
+} from '../FS/FS';
 import {
   getGlobalValue,
-} from './getGlobalValue';
+} from '../../getGlobalValue';
 import {
   MEMFS,
-} from './MEMFS';
+} from '../MEMFS/MEMFS';
 import {
   PATH,
-} from './PATH';
+} from '../../PATH';
 import {
   assertValid,
 } from 'ts-assertions';

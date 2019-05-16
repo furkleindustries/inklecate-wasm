@@ -1,6 +1,6 @@
 import {
   FS,
-} from './FS';
+} from './filesystems/FS/FS';
 import {
   getGlobalValue,
 } from './getGlobalValue';

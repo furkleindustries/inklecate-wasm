@@ -13,7 +13,7 @@ import {
 import * as emscriptenFuncs from './emscripten';
 import {
   FS,
-} from './FS';
+} from './filesystems/FS/FS';
 import fs from 'fs-extra';
 import {
   getGlobalValue,

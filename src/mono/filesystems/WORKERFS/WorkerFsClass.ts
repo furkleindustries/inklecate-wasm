@@ -1,27 +1,27 @@
 import {
   EnvironmentTypes,
-} from './EnvironmentTypes';
+} from '../../EnvironmentTypes';
 import {
   ErrorNumberCodes,
-} from './errors/ErrorNumberCodes';
+} from '../../errors/ErrorNumberCodes';
 import {
   FS,
-} from './FS';
+} from '../FS/FS';
 import {
   getEnvType,
-} from './getEnvVars';
+} from '../../getEnvVars';
 import {
   getGlobalValue,
-} from './getGlobalValue';
+} from '../../getGlobalValue';
 import {
   Module,
-} from './Module';
+} from '../../Module';
 import {
   assert,
 } from 'ts-assertions';
 import {
   throwFromErrorNumber,
-} from './TTY';
+} from '../../TTY';
 
 const envType = getEnvType(Module.ENVIRONMENT);
 

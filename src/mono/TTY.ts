@@ -6,7 +6,7 @@ import {
 } from './errors/ErrorNumberCodes';
 import {
   FS,
-} from './FS';
+} from './filesystems/FS/FS';
 import fs from 'fs-extra';
 import {
   getEnvType,

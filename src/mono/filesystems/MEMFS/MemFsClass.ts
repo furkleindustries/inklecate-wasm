@@ -1,18 +1,18 @@
 import {
   ErrorNumberCodes,
-} from './errors/ErrorNumberCodes';
+} from '../../errors/ErrorNumberCodes';
 import {
   FS,
-} from './FS';
+} from '../FS/FS';
 import {
   getGlobalValue,
-} from './getGlobalValue';
+} from '../../getGlobalValue';
 import {
   _malloc,
-} from './_malloc';
+} from '../../_malloc';
 import {
   throwFromErrorNumber,
-} from './TTY';
+} from '../../TTY';
 import {
   assertValid,
 } from 'ts-assertions';
