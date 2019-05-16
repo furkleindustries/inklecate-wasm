@@ -1,8 +1,6 @@
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const callRuntimeCallbacks = (callbacks: Array<Function | { arg: any, func: any }>) => {
   while (callbacks.length > 0) {

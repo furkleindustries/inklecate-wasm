@@ -1,11 +1,9 @@
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   getMonoWasmFilePaths,
 } from './getMonoWasmFilePaths';
-
-const Module = getModule();
 
 const [
   wasmTextFile,

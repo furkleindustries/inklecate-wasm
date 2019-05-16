@@ -2,10 +2,8 @@ import {
   getHeap,
 } from '../heaps/heaps';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const ___setErrNo = (value: number) => {
   if (Module.___errno_location) {

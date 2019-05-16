@@ -1,8 +1,6 @@
 import {
-  getModule,
-} from './getModule';
-
-const Module = getModule();
+  Module,
+} from './Module';
 
 let totalMemory = Module.TOTAL_MEMORY || 134217728;
 export const getTotalMemory = () => totalMemory;

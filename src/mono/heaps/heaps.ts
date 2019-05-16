@@ -1,8 +1,6 @@
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 let buffer: Buffer;
 export const getBuffer = () => buffer;

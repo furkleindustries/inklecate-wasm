@@ -1,7 +1,5 @@
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 
-const Module = getModule();
-
-export const _emscripten_get_now = (msg: string) => Module.abort(msg);
+export const _emscripten_get_now = Module.abort;

@@ -5,10 +5,8 @@ import {
   getEnvType,
 } from '../getEnvVars';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 const envType = getEnvType(Module.ENVIRONMENT);
 

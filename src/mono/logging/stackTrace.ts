@@ -2,13 +2,11 @@ import {
   demangleAll,
 } from './demangleAll';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   jsStackTrace,
 } from './jsStackTrace';
-
-const Module = getModule();
 
 export const stackTrace = () => demangleAll(
   typeof Module.extraStackTrace === 'function' ?

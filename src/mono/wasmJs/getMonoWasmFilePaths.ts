@@ -1,11 +1,9 @@
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   isDataUri,
 } from '../isDataUri';
-
-const Module = getModule();
 
 export const getMonoWasmFilePaths = () => {
   let asmjsCodeFile = 'mono.temp.asm.js';

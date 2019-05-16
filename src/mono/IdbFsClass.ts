@@ -69,7 +69,7 @@ export class IdbFsClass extends BaseIdbFs {
     });
   });
 
-  getDB = (name: string, callback: Function) => {
+  public readonly getDB = (name: string, callback: Function) => {
     const db = this.dbs[name];
     if (db) {
       return callback(null, db);
@@ -116,7 +116,7 @@ export class IdbFsClass extends BaseIdbFs {
     };
   };
 
-  getLocalSet = (mount: { mountpoint: any }, callback: Function) => {
+  public readonly getLocalSet = (mount: { mountpoint: any }, callback: Function) => {
     const entries: Record<string, { timestamp: number }> = {};
     const isRealDir = (_path: string) => _path !== '.' && _path !== '..';
     const toAbsolute = (root: string) => (_path: string) => (
@@ -149,7 +149,7 @@ export class IdbFsClass extends BaseIdbFs {
     });
   };
 
-  getRemoteSet = (mount: { mountpoint: string }, callback: Function) => {
+  public readonly getRemoteSet = (mount: { mountpoint: string }, callback: Function) => {
     const entries: Record<string, any> = {};
     this.getDB(mount.mountpoint, (err: Error, db: IDBDatabase) => {
       if (err) {
@@ -185,8 +185,9 @@ export class IdbFsClass extends BaseIdbFs {
     });
   };
 
-  loadLocalEntry = (path: string, callback: Function) => {
-    let stat, node;
+  public readonly loadLocalEntry = (path: string, callback: Function) => {
+    let stat;
+    let node;
     try {
       let lookup = FS.lookupPath(path);
       node = lookup.node;
@@ -194,11 +195,12 @@ export class IdbFsClass extends BaseIdbFs {
     } catch (e) {
       return callback(e)
     }
+
     if (FS.isDir(stat.mode)) {
       return callback(null, {
         timestamp: stat.mtime,
         mode: stat.mode
-      })
+      });
     } else if (FS.isFile(stat.mode)) {
       node.contents = MEMFS.getFileDataAsTypedArray(node);
       return callback(null, {
@@ -211,7 +213,11 @@ export class IdbFsClass extends BaseIdbFs {
     }
   };
 
-  storeLocalEntry = (path: string, entry: any, callback: Function) => {
+  public readonly storeLocalEntry = (
+    path: string,
+    entry: any,
+    callback: Function,
+  ) => {
     try {
       if (FS.isDir(entry.mode)) {
         FS.mkdir(path, entry.mode)
@@ -255,8 +261,8 @@ export class IdbFsClass extends BaseIdbFs {
     };
   };
 
-  storeRemoteEntry = (store: IDBObjectStore, path: string, entry: any, callback: Function) => {
-    let req = store.put(entry, path);
+  public readonly storeRemoteEntry = (store: IDBObjectStore, path: string, entry: any, callback: Function) => {
+    const req = store.put(entry, path);
     req.onsuccess = () => callback(null);
     req.onerror = ({ preventDefault }: Event) => {
       callback(this.error);
@@ -264,8 +270,12 @@ export class IdbFsClass extends BaseIdbFs {
     };
   };
 
-  removeRemoteEntry = (store: IDBObjectStore, path: string, callback: Function) => {
-    let req = store.delete(path);
+  public readonly removeRemoteEntry = (
+    store: IDBObjectStore,
+    path: string,
+    callback: Function,
+  ) => {
+    const req = store.delete(path);
     req.onsuccess = () => callback(null);
 
     req.onerror = ({ preventDefault }: Event) => {
@@ -274,7 +284,7 @@ export class IdbFsClass extends BaseIdbFs {
     };
   };
 
-  reconcile = (
+  public readonly reconcile = (
     src: {
       db: IDBDatabase,
       entries: Record<string, any>,

@@ -1,8 +1,6 @@
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 let runDependencies = 0;
 export const getRunDependencies = () => runDependencies;

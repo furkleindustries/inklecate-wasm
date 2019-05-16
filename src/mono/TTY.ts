@@ -12,14 +12,14 @@ import {
   getEnvType,
 } from './getEnvVars';
 import {
-  getModule,
-} from './getModule';
+  intArrayFromString,
+} from './emscripten/intArrayFromString';
+import {
+  Module,
+} from './Module';
 import {
   utf8ArrayToString,
 } from './emscripten';
-import { intArrayFromString } from './emscripten/intArrayFromString';
-
-const Module = getModule();
 
 const envType = getEnvType(Module.ENVIRONMENT);
 
@@ -238,6 +238,7 @@ export class TTY {
           tty.output.push(val)
       }
     },
+
     flush: (tty: TtyInstance) => {
       if (tty.output && tty.output.length > 0) {
         Module.printErr(utf8ArrayToString(tty.output, 0));

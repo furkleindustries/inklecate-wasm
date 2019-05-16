@@ -5,8 +5,8 @@ import {
   getCFunc,
 } from '../getCFunc';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   pointerStringify,
 } from '../pointers/pointerStringify';
@@ -14,14 +14,12 @@ import {
   stringToC,
 } from './stringToC';
 
-const Module = getModule();
-
 export const ccall = (
   ident: string,
   returnType: string,
   argTypes: Array<'string' | 'array' | 'number'>,
   args: any[],
-  opts?: any[],
+  opts?: never[],
 ) => {
   const func = getCFunc(ident);
   const cArgs = [];

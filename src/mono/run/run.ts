@@ -2,8 +2,11 @@ import {
   ensureInitRuntime,
 } from './ensureInitRuntime';
 import {
-  getModule,
-} from '../getModule';
+  getRunDependencies,
+} from './runDependencies';
+import {
+  Module,
+} from '../Module';
 import {
   preMain,
 } from './preMain';
@@ -13,9 +16,6 @@ import {
 import {
   postRun,
 } from './postRun';
-import { getRunDependencies } from './runDependencies';
-
-const Module = getModule();
 
 export const run = (...args: any[]) => {
   args = args || Module.arguments;

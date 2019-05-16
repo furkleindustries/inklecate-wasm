@@ -2,24 +2,26 @@ import {
   getBinaryPromise,
 } from './getWasmBinaryPromise';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   getMonoWasmFilePaths,
 } from './getMonoWasmFilePaths';
 import {
+  instantiateArrayBuffer,
+} from './instantiateArrayBuffer';
+import {
   isDataUri,
 } from '../isDataUri';
+import {
+  receiveInstantiatedSource,
+} from './receiveInstantiatedSource';
 import {
   addRunDependency,
 } from '../run/runDependencies';
 import {
   receiveWasmInstance,
 } from './receiveWasmInstance';
-import { receiveInstantiatedSource } from './receiveInstantiatedSource';
-import { instantiateArrayBuffer } from './instantiateArrayBuffer';
-
-const Module = getModule();
 
 const [
   wasmTextFile,
@@ -28,7 +30,7 @@ const [
 ] = getMonoWasmFilePaths();
 
 export const doNativeWasm = (
-  global: any,
+  global: never,
   env: any,
   providedBuffer: Buffer,
 ) => {
@@ -84,17 +86,17 @@ export const doNativeWasm = (
   {
     // @ts-ignore
     WebAssembly.instantiateStreaming(
-      fetch(wasmBinaryFile, { credentials: 'same-origin' }), info
+      fetch(wasmBinaryFile, { credentials: 'same-origin' }), info,
     ).then(
-      receiveInstantiatedSource,
-      (reason: string) => {
-        Module.printErr(`WASM streaming compile failed: ${reason}.`);
-        Module.printErr('Falling back to ArrayBuffer instantiation.');
-        instantiateArrayBuffer(receiveInstantiatedSource);
-      },
+        receiveInstantiatedSource,
+        (reason: string) => {
+          Module.printErr(`WASM streaming compile failed: ${reason}.`);
+          Module.printErr('Falling back to ArrayBuffer instantiation.');
+          instantiateArrayBuffer(receiveInstantiatedSource);
+        },
     );
   } else {
-    instantiateArrayBuffer(receiveInstantiatedSource)
+    instantiateArrayBuffer(receiveInstantiatedSource);
   }
 
   return {};

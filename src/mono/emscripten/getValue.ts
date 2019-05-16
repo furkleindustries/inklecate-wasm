@@ -2,10 +2,8 @@ import {
   getHeap,
 } from '../heaps/heaps';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const getValue = (ptr: number, type: string) => {
   let realType = type || 'i8';

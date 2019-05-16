@@ -12,8 +12,8 @@ import {
   updateGlobalBufferViews,
 } from './heaps/heaps';
 import {
-  getModule,
-} from './getModule';
+  Module,
+} from './Module';
 import {
   getPointer,
 } from './pointers/pointers';
@@ -21,8 +21,6 @@ import {
   getTotalMemory,
   setTotalMemory,
 } from './totalMemory';
-
-const Module = getModule();
 
 export const enlargeMemory = () => {
   const PAGE_MULTIPLE = Module.usingWasm ? WASM_PAGE_SIZE : ASMJS_PAGE_SIZE;

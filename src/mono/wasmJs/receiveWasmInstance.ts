@@ -3,8 +3,8 @@ import {
   setExports,
 } from './exports';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   updateGlobalBuffer,
   updateGlobalBufferViews,
@@ -13,10 +13,8 @@ import {
   removeRunDependency,
 } from '../run/runDependencies';
 
-const Module = getModule();
-
 export const receiveWasmInstance = (
-  { exports }: any,
+  { exports }: Record<string, any>,
   _module: string,
 ) => {
   setExports(exports);

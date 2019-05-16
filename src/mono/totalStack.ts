@@ -1,8 +1,6 @@
 import {
-  getModule,
-} from './getModule';
-
-const Module = getModule();
+  Module,
+} from './Module';
 
 let totalStack = Module.TOTAL_STACK || 5242880;
 export const getTotalStack = () => totalStack;

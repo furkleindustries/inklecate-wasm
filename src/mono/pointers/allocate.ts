@@ -9,8 +9,8 @@ import {
   getHeap,
 } from '../heaps/heaps';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   getNativeTypeSize,
 } from '../getNativeTypeSize';
@@ -23,8 +23,6 @@ import {
 import {
   assert,
 } from 'ts-assertions';
-
-const Module = getModule();
 
 export const allocate = (
   slab: number | number[],

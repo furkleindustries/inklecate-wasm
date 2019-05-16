@@ -1,11 +1,9 @@
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   writeArrayToMemory,
 } from '../heaps/writeArrayToMemory';
-
-const Module = getModule();
 
 export const arrayToC = (arr: Array<any>) => {
   const ret = Module.stackAlloc(arr.length);

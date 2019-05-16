@@ -2,16 +2,14 @@ import {
   getHeap,
 } from '../heaps/heaps';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   lengthBytesUtf8,
 } from '../emscripten/lengthyBytesUtf8';
 import {
   stringToUtf8Array,
 } from '../emscripten/stringToUtf8Array';
-
-const Module = getModule();
 
 export const allocateUTF8 = (str: string) => {
   var size = lengthBytesUtf8(str) + 1;

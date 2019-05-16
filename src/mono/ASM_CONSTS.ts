@@ -1,6 +1,6 @@
 import {
-  getModule,
-} from './getModule';
+  Module,
+} from './Module';
 import {
   getPointer,
 } from './pointers/pointers';
@@ -16,8 +16,6 @@ import {
 import {
   utf8ToString,
 } from './emscripten/utf8ToString';
-
-const Module = getModule();
 
 export const ASM_CONSTS: Array<(...args: any[]) => number> = [
   ($0: number, $1: number) => {

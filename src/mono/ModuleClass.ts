@@ -53,6 +53,8 @@ export class ModuleClass extends BaseModule {
   public noExitRuntime = true;
   public calledRun = false;
 
+  public ENVIRONMENT?: Record<string, any>;
+
   public readonly STATIC_BASE = getPointer('STATIC_BASE');
   public readonly STATIC_BUMP = getPointer('STATIC_BUMP');
 

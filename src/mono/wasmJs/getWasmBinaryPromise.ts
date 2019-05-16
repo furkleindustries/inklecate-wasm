@@ -5,15 +5,17 @@ import {
   getEnvType,
 } from '../getEnvVars';
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import {
   getMonoWasmFilePaths,
 } from './getMonoWasmFilePaths';
-import { getWasmBinary } from './getWasmBinary';
-import { assertValid } from 'ts-assertions';
-
-const Module = getModule();
+import {
+  getWasmBinary,
+} from './getWasmBinary';
+import {
+  assertValid,
+} from 'ts-assertions';
 
 const envType = getEnvType(Module.ENVIRONMENT);
 

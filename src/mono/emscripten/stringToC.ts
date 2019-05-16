@@ -1,9 +1,7 @@
 import {
-  getModule,
-} from '../getModule';
+  Module,
+} from '../Module';
 import { stringToUtf8 } from './stringToUtf8';
-
-const Module = getModule();
 
 export const stringToC = (str: string) => {
   let ret = 0;

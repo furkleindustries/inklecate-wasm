@@ -8,10 +8,8 @@ import {
   getAtPostRun,
 } from './getAtPostRun';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const postRun = () => {
   if (Module.postRun) {

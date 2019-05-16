@@ -2,10 +2,8 @@ import {
   getBinaryPromise,
 } from './getWasmBinaryPromise';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const instantiateArrayBuffer = (receiver: any) => (
   getBinaryPromise().then((binary) => (
@@ -14,7 +12,7 @@ export const instantiateArrayBuffer = (receiver: any) => (
   )).then(
     receiver,
     (reason: string) => {
-      Module.printErr(`Failed to asynchronously prepare wasm: ${reason}.`);
+      Module.printErr(`Failed to asynchronously prepare WASM: ${reason}.`);
       Module.abort(reason);
     },
   )

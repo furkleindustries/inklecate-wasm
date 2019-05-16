@@ -1,11 +1,9 @@
 import {
-  getModule,
-} from './getModule';
+  Module,
+} from './Module';
 import {
   assertValid,
 } from 'ts-assertions';
-
-const Module = getModule();
 
 export const getCFunc = (ident: string) => assertValid<Function>(
   Module[`_${ident}`],

@@ -8,10 +8,8 @@ import {
   getAtPreRun,
 } from './getAtPreRun';
 import {
-  getModule,
-} from '../getModule';
-
-const Module = getModule();
+  Module,
+} from '../Module';
 
 export const preRun = () => {
   if (Module.preRun) {
