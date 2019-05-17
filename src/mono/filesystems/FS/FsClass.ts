@@ -135,7 +135,7 @@ export class FsClass extends BaseFs {
         );
       }
 
-      path = path ? parent.name + '/' + path : parent.name;
+      path = path ? `${parent.name}/${path}` : parent.name;
       parent = parent.parent;
     }
   };
