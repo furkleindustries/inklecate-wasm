@@ -8,15 +8,15 @@ import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall12 = (which: never, varargs: unknown) => {
+export const ___syscall40 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
 
   try {
     const path = SYSCALLS.getStr();
-    FS.chdir(path);
+    FS.rmdir(path);
     return 0;
   } catch (e) {
-    if (FS === undefined || !(e instanceof FS.ErrnoError as )) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

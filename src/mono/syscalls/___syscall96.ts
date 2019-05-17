@@ -2,21 +2,22 @@ import {
   abort,
 } from '../abort';
 import {
+  ErrorNumberCodes,
+} from '../errors/ErrorNumberCodes';
+import {
   FS,
 } from '../filesystems/FS/FS';
 import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall12 = (which: never, varargs: unknown) => {
-  SYSCALLS.varargs = varargs;
+export const ___syscall96 = (which: never, constargs: unknown) => {
+  SYSCALLS.constargs = constargs;
 
   try {
-    const path = SYSCALLS.getStr();
-    FS.chdir(path);
     return 0;
   } catch (e) {
-    if (FS === undefined || !(e instanceof FS.ErrnoError as )) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

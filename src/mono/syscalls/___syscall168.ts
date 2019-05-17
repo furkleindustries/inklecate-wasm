@@ -13,6 +13,7 @@ import {
 
 export const ___syscall168 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     const fds = SYSCALLS.get();
     const nfds = SYSCALLS.get();
@@ -41,7 +42,7 @@ export const ___syscall168 = (which: never, varargs: unknown) => {
 
     return nonzero;
   } catch (e) {
-    if (typeof FS === undefined || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

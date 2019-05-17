@@ -22,6 +22,7 @@ import {
 
 export const ___syscall142 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     const nfds = SYSCALLS.get();
     const readfds = SYSCALLS.get();
@@ -45,8 +46,13 @@ export const ___syscall142 = (which: never, varargs: unknown) => {
     let dstWriteHigh = 0;
     let dstExceptLow = 0
     let dstExceptHigh = 0;
-    const allLow = (readfds ? getHeap('HEAP32')[readfds >> 2] : 0) | (writefds ? getHeap('HEAP32')[writefds >> 2] : 0) | (exceptfds ? getHeap('HEAP32')[exceptfds >> 2] : 0);
-    const allHigh = (readfds ? getHeap('HEAP32')[readfds + 4 >> 2] : 0) | (writefds ? getHeap('HEAP32')[writefds + 4 >> 2] : 0) | (exceptfds ? getHeap('HEAP32')[exceptfds + 4 >> 2] : 0);
+    const allLow = (readfds ? getHeap('HEAP32')[readfds >> 2] : 0) |
+      (writefds ? getHeap('HEAP32')[writefds >> 2] : 0) |
+      (exceptfds ? getHeap('HEAP32')[exceptfds >> 2] : 0);
+
+    const allHigh = (readfds ? getHeap('HEAP32')[readfds + 4 >> 2] : 0) |
+      (writefds ? getHeap('HEAP32')[writefds + 4 >> 2] : 0) |
+      (exceptfds ? getHeap('HEAP32')[exceptfds + 4 >> 2] : 0);
 
     const check = (fd: number, low: number, high: number, val: number) => (
       fd < 32 ? low & val : high & val
@@ -63,7 +69,7 @@ export const ___syscall142 = (which: never, varargs: unknown) => {
         throw throwFromErrorNumber(ErrorNumberCodes.EBADF);
       }
 
-      let flags = stream.stream_ops.poll ?
+      const flags = stream.stream_ops.poll ?
         stream.stream_ops.poll(stream) :
         SYSCALLS.DEFAULT_POLLMASK;
 
@@ -115,7 +121,7 @@ export const ___syscall142 = (which: never, varargs: unknown) => {
 
     return total;
   } catch (e) {
-    if (typeof FS === "undefined" || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

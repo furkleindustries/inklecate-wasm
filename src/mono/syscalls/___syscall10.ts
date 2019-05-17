@@ -10,12 +10,13 @@ import {
 
 export const ___syscall10 = (which: number, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     const path = SYSCALLS.getStr();
     FS.unlink(path);
     return 0;
   } catch (e) {
-    if (FS === undefined || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError )) {
       abort(e);
     }
 

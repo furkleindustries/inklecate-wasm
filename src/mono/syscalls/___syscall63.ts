@@ -8,14 +8,17 @@ import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall15 = (which: never, varargs: unknown) => {
+export const ___syscall63 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
 
   try {
-    const path = SYSCALLS.getStr();
-    const mode = SYSCALLS.get();
-    FS.chmod(path, mode);
-    return 0;
+    const old = SYSCALLS.getStreamFromFD()
+    const suggestFD = SYSCALLS.get();
+    if (old.fd === suggestFD) {
+      return suggestFD;
+    }
+
+    return SYSCALLS.doDup(old.path, old.flags, suggestFD);
   } catch (e) {
     if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);

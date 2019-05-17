@@ -22,7 +22,7 @@ export const BaseFs = getGlobalValue('FS') || {};
 export class FsClass extends BaseFs {
   public readonly currentPath = '/';
   public readonly devices = {};
-  public readonly ErrnoError: Error | null = null;
+  public readonly ErrnoError: ErrorConstructor = null as any as ErrorConstructor;
   public readonly filesystems = null;
   public readonly genericErrors: Record<string, unknown> = {};
   public readonly ignorePermissions = true;

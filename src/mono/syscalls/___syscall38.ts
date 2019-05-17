@@ -8,18 +8,19 @@ import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall12 = (which: never, varargs: unknown) => {
+export const ___syscall38 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
 
   try {
-    const path = SYSCALLS.getStr();
-    FS.chdir(path);
+    const old_path = SYSCALLS.getStr()
+    const new_path = SYSCALLS.getStr();
+    FS.rename(old_path, new_path);
     return 0;
   } catch (e) {
-    if (FS === undefined || !(e instanceof FS.ErrnoError as )) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 
     return -e.errno;
   }
-};
+}

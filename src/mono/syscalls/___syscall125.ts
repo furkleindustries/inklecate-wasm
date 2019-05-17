@@ -10,10 +10,11 @@ import {
 
 export const ___syscall125 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     return 0;
   } catch (e) {
-    if (typeof FS === "undefined" || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

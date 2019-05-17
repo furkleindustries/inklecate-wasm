@@ -5,18 +5,19 @@ import {
   FS,
 } from '../filesystems/FS/FS';
 import {
+  PROCINFO,
+} from './PROCINFO';
+import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall12 = (which: never, varargs: unknown) => {
+export function ___syscall20(which: never, varargs: unknown) {
   SYSCALLS.varargs = varargs;
 
   try {
-    const path = SYSCALLS.getStr();
-    FS.chdir(path);
-    return 0;
+    return PROCINFO.pid;
   } catch (e) {
-    if (FS === undefined || !(e instanceof FS.ErrnoError as )) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

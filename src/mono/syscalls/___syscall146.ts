@@ -10,13 +10,14 @@ import {
 
 export const ___syscall146 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     const stream = SYSCALLS.getStreamFromFD()
     const iov = SYSCALLS.get()
     const iovcnt = SYSCALLS.get();
     return SYSCALLS.doWritev(stream, iov, iovcnt);
   } catch (e) {
-    if (typeof FS === "undefined" || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

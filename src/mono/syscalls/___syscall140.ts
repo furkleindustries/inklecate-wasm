@@ -13,6 +13,7 @@ import {
 
 export const ___syscall140 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
+
   try {
     const stream = SYSCALLS.getStreamFromFD();
     const offset_high = SYSCALLS.get();
@@ -31,7 +32,7 @@ export const ___syscall140 = (which: never, varargs: unknown) => {
 
     return 0;
   } catch (e) {
-    if (FS === undefined || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 

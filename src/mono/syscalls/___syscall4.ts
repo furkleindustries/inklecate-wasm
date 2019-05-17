@@ -5,17 +5,20 @@ import {
   FS,
 } from '../filesystems/FS/FS';
 import {
+  getHeap,
+} from '../heaps/heaps';
+import {
   SYSCALLS,
 } from './SYSCALLS';
 
-export const ___syscall15 = (which: never, varargs: unknown) => {
+export const ___syscall4 = (which: never, varargs: unknown) => {
   SYSCALLS.varargs = varargs;
 
   try {
-    const path = SYSCALLS.getStr();
-    const mode = SYSCALLS.get();
-    FS.chmod(path, mode);
-    return 0;
+    const stream = SYSCALLS.getStreamFromFD()
+    const buf = SYSCALLS.get()
+    const count = SYSCALLS.get();
+    return FS.write(stream, getHeap('HEAP8'), buf, count);
   } catch (e) {
     if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);

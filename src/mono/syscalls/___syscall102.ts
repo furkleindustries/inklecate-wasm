@@ -1,4 +1,7 @@
 import {
+  __read_sockaddr,
+} from '../filesystems/SOCKFS/__read_sockaddr';
+import {
   __write_sockaddr,
 } from '../filesystems/SOCKFS/__write_sockaddr';
 import {
@@ -25,98 +28,130 @@ import {
 import {
   assert,
 } from 'ts-assertions';
-import { __read_sockaddr } from '../filesystems/SOCKFS/__read_sockaddr';
 
 export const ___syscall102 = (which, varargs) => {
   SYSCALLS.varargs = varargs;
+
   try {
-    var call = SYSCALLS.get()
-    let socketvararg = SYSCALLS.get();
+    const call = SYSCALLS.get();
+    const socketvararg = SYSCALLS.get();
     SYSCALLS.varargs = socketvararg;
+
     if (call === 1) {
-      var domain = SYSCALLS.get()
-        , type = SYSCALLS.get()
-        , protocol = SYSCALLS.get();
-      var sock = SOCKFS.createSocket(domain, type, protocol);
+      const domain = SYSCALLS.get()
+      const type = SYSCALLS.get()
+      const protocol = SYSCALLS.get();
+      const sock = SOCKFS.createSocket(domain, type, protocol);
       assert(sock.stream.fd < 64);
       return sock.stream.fd;
     } else if (call === 2) {
-        var sock = SYSCALLS.getSocketFromFD()
-          , info = SYSCALLS.getSocketAddress();
-        sock.sock_ops.bind(sock, info.addr, info.port);
-        return 0;
+      const sock = SYSCALLS.getSocketFromFD()
+      const info = SYSCALLS.getSocketAddress();
+      sock.sock_ops.bind(sock, info.addr, info.port);
+      return 0;
     } else if (call === 3) {
-        var sock = SYSCALLS.getSocketFromFD()
-          , info = SYSCALLS.getSocketAddress();
-        sock.sock_ops.connect(sock, info.addr, info.port);
-        return 0;
+      const sock = SYSCALLS.getSocketFromFD()
+      const info = SYSCALLS.getSocketAddress();
+      sock.sock_ops.connect(sock, info.addr, info.port);
+      return 0;
     } else if (call === 4) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , backlog = SYSCALLS.get();
+      const sock = SYSCALLS.getSocketFromFD()
+      const backlog = SYSCALLS.get();
       sock.sock_ops.listen(sock, backlog);
       return 0
     } else if (call === 5) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , addr = SYSCALLS.get()
-        , addrlen = SYSCALLS.get();
-      var newsock = sock.sock_ops.accept(sock);
+      const sock = SYSCALLS.getSocketFromFD()
+      const addr = SYSCALLS.get()
+      const addrlen = SYSCALLS.get();
+      const newsock = sock.sock_ops.accept(sock);
       if (addr) {
-        var res = __write_sockaddr(addr, newsock.family, DNS.lookup_name(newsock.daddr), newsock.dport);
-        assert(!res.errno)
+        const res = __write_sockaddr(addr, newsock.family, DNS.lookup_name(newsock.daddr), newsock.dport);
+        assert(!res.errno);
       }
+
       return newsock.stream.fd;
     } else if (call === 6) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , addr = SYSCALLS.get()
-        , addrlen = SYSCALLS.get();
-      var res = __write_sockaddr(addr, sock.family, DNS.lookup_name(sock.saddr || "0.0.0.0"), sock.sport);
+      const sock = SYSCALLS.getSocketFromFD()
+      const addr = SYSCALLS.get()
+      const addrlen = SYSCALLS.get();
+      const res = __write_sockaddr(
+        addr,
+        sock.family,
+        DNS.lookup_name(sock.saddr || '0.0.0.0'),
+        sock.sport,
+      );
+
       assert(!res.errno);
-      return 0
+      return 0;
     } else if (call === 7) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , addr = SYSCALLS.get()
-        , addrlen = SYSCALLS.get();
+      const sock = SYSCALLS.getSocketFromFD()
+      const addr = SYSCALLS.get()
+      const addrlen = SYSCALLS.get();
       if (!sock.daddr) {
         return -ErrorNumberCodes.ENOTCONN
       }
-      var res = __write_sockaddr(addr, sock.family, DNS.lookup_name(sock.daddr), sock.dport);
+
+      const res = __write_sockaddr(
+        addr,
+        sock.family,
+        DNS.lookup_name(sock.daddr),
+        sock.dport,
+      );
+
       assert(!res.errno);
       return 0;
     } else if (call === 11) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , message = SYSCALLS.get()
-        , length = SYSCALLS.get()
-        , flags = SYSCALLS.get()
-        , dest = SYSCALLS.getSocketAddress(true);
+      const sock = SYSCALLS.getSocketFromFD();
+      const message = SYSCALLS.get();
+      const length = SYSCALLS.get();
+      const flags = SYSCALLS.get();
+      const dest = SYSCALLS.getSocketAddress(true);
       if (!dest) {
-        return FS.write(sock.stream, getHeap('HEAP8'), message, length)
+        return FS.write(sock.stream, getHeap('HEAP8'), message, length);
       } else {
-        return sock.sock_ops.sendmsg(sock, getHeap('HEAP8'), message, length, dest.addr, dest.port)
+        return sock.sock_ops.sendmsg(
+          sock,
+          getHeap('HEAP8'),
+          message,
+          length,
+          dest.addr,
+          dest.port,
+        );
       }
     } else if (call === 12) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , buf = SYSCALLS.get()
-        , len = SYSCALLS.get()
-        , flags = SYSCALLS.get()
-        , addr = SYSCALLS.get()
-        , addrlen = SYSCALLS.get();
-      var msg = sock.sock_ops.recvmsg(sock, len);
-      if (!msg)
+      const sock = SYSCALLS.getSocketFromFD();
+      const buf = SYSCALLS.get();
+      const len = SYSCALLS.get();
+      const flags = SYSCALLS.get();
+      const addr = SYSCALLS.get();
+      const addrlen = SYSCALLS.get();
+
+      const msg = sock.sock_ops.recvmsg(sock, len);
+      if (!msg) {
         return 0;
+      }
+
       if (addr) {
-        var res = __write_sockaddr(addr, sock.family, DNS.lookup_name(msg.addr), msg.port);
+        const res = __write_sockaddr(
+          addr,
+          sock.family,
+          DNS.lookup_name(msg.addr),
+          msg.port,
+        );
+
         assert(!res.errno)
       }
+
       getHeap('HEAPU8').set(msg.buffer, buf);
-      return msg.buffer.byteLength
+      return msg.buffer.byteLength;
     } if (call === 14) {
       return -ErrorNumberCodes.ENOPROTOOPT;
     } else if (call === 15) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , level = SYSCALLS.get()
-        , optname = SYSCALLS.get()
-        , optval = SYSCALLS.get()
-        , optlen = SYSCALLS.get();
+      const sock = SYSCALLS.getSocketFromFD()
+      const level = SYSCALLS.get()
+      const optname = SYSCALLS.get()
+      const optval = SYSCALLS.get()
+      const optlen = SYSCALLS.get();
       if (level === 1) {
         if (optname === 4) {
           getHeap('HEAP32')[optval >> 2] = sock.error;
@@ -127,43 +162,49 @@ export const ___syscall102 = (which, varargs) => {
       }
       return -ErrorNumberCodes.ENOPROTOOPT;
     } else if (call === 16) {
-      var sock = SYSCALLS.getSocketFromFD()
-        , message = SYSCALLS.get()
-        , flags = SYSCALLS.get();
-      var iov = getHeap('HEAP32')[message + 8 >> 2];
-      var num = getHeap('HEAP32')[message + 12 >> 2];
-      var addr, port;
-      var name = getHeap('HEAP32')[message >> 2];
-      var namelen = getHeap('HEAP32')[message + 4 >> 2];
+      const sock = SYSCALLS.getSocketFromFD()
+      const message = SYSCALLS.get()
+      const flags = SYSCALLS.get();
+      const iov = getHeap('HEAP32')[message + 8 >> 2];
+      const num = getHeap('HEAP32')[message + 12 >> 2];
+      let addr;
+      let port;
+      const name = getHeap('HEAP32')[message >> 2];
+      const namelen = getHeap('HEAP32')[message + 4 >> 2];
       if (name) {
-        var info = __read_sockaddr(name, namelen);
-        if (info.errno)
+        const info = __read_sockaddr(name, namelen);
+        if (info.errno) {
           return -info.errno;
+        }
+
         port = info.port;
-        addr = DNS.lookup_addr(info.addr) || info.addr
+        addr = DNS.lookup_addr(info.addr) || info.addr;
       }
-      var total = 0;
-      for (var i = 0; i < num; i++) {
-        total += getHeap('HEAP32')[iov + (8 * i + 4) >> 2]
+
+      let total = 0;
+      for (let ii = 0; ii < num; ii += 1) {
+        total += getHeap('HEAP32')[iov + (8 * ii + 4) >> 2];
       }
-      var view = new Uint8Array(total);
-      var offset = 0;
-      for (var i = 0; i < num; i++) {
-        var iovbase = getHeap('HEAP32')[iov + (8 * i + 0) >> 2];
-        var iovlen = getHeap('HEAP32')[iov + (8 * i + 4) >> 2];
-        for (var j = 0; j < iovlen; j++) {
-          view[offset++] = getHeap('HEAP8')[iovbase + j >> 0]
+
+      const view = new Uint8Array(total);
+      let offset = 0;
+      for (let ii = 0; ii < num; ii += 1) {
+        var iovbase = getHeap('HEAP32')[iov + (8 * ii + 0) >> 2];
+        var iovlen = getHeap('HEAP32')[iov + (8 * ii + 4) >> 2];
+        for (let jj = 0; jj < iovlen; jj += 1) {
+          view[offset++] = getHeap('HEAP8')[iovbase + jj >> 0];
         }
       }
-      return sock.sock_ops.sendmsg(sock, view, 0, total, addr, port)
+
+      return sock.sock_ops.sendmsg(sock, view, 0, total, addr, port);
     } else if (call === 17) {
-      let sock = SYSCALLS.getSocketFromFD()
-      let message = SYSCALLS.get();
-      let iov = getHeap('HEAP32')[message + 8 >> 2];
-      let num = getHeap('HEAP32')[message + 12 >> 2];
+      const sock = SYSCALLS.getSocketFromFD()
+      const message = SYSCALLS.get();
+      const iov = getHeap('HEAP32')[message + 8 >> 2];
+      const num = getHeap('HEAP32')[message + 12 >> 2];
       let total = 0;
-      for (var i = 0; i < num; i++) {
-        total += getHeap('HEAP32')[iov + (8 * i + 4) >> 2]
+      for (let ii = 0; ii < num; ii += 1) {
+        total += getHeap('HEAP32')[iov + (8 * ii + 4) >> 2];
       }
 
       let msg = sock.sock_ops.recvmsg(sock, total);
@@ -183,19 +224,20 @@ export const ___syscall102 = (which, varargs) => {
         assert(!res.errno);
       }
 
-      var bytesRead = 0;
-      var bytesRemaining = msg.buffer.byteLength;
-      for (var i = 0; bytesRemaining > 0 && i < num; i++) {
-        var iovbase = getHeap('HEAP32')[iov + (8 * i + 0) >> 2];
-        var iovlen = getHeap('HEAP32')[iov + (8 * i + 4) >> 2];
+      let bytesRead = 0;
+      let bytesRemaining = msg.buffer.byteLength;
+      for (let ii = 0; bytesRemaining > 0 && ii < num; ii += 1) {
+        const iovbase = getHeap('HEAP32')[iov + (8 * ii + 0) >> 2];
+        const iovlen = getHeap('HEAP32')[iov + (8 * ii + 4) >> 2];
         if (!iovlen) {
-          continue
+          continue;
         }
-        var length = Math.min(iovlen, bytesRemaining);
-        var buf = msg.buffer.subarray(bytesRead, bytesRead + length);
+
+        const length = Math.min(iovlen, bytesRemaining);
+        const buf = msg.buffer.subarray(bytesRead, bytesRead + length);
         getHeap('HEAPU8').set(buf, iovbase + bytesRead);
         bytesRead += length;
-        bytesRemaining -= length
+        bytesRemaining -= length;
       }
 
       return bytesRead;
@@ -203,7 +245,7 @@ export const ___syscall102 = (which, varargs) => {
       abort(`Unsupported socketcall syscall ${call}`);
     }
   } catch (e) {
-    if (typeof FS === "undefined" || !(e instanceof (FS.ErrnoError as any))) {
+    if (FS === undefined || !(e instanceof FS.ErrnoError)) {
       abort(e);
     }
 
