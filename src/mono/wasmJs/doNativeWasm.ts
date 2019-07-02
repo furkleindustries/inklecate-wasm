@@ -32,7 +32,7 @@ const [
 export const doNativeWasm = (
   global: any,
   env: any,
-  providedBuffer: Buffer,
+  providedBuffer?: Buffer,
 ) => {
   // @ts-ignore
   if (typeof WebAssembly !== 'object') {

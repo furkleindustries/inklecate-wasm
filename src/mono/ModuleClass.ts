@@ -37,6 +37,9 @@ import {
   wasmReallocBuffer,
 } from './wasmJs/wasmReallocBuffer';
 
+import {
+
+} from './abort';
 import inkCompiler from './bin/Release/netcoreapp3.0/ink_compiler.dll';
 import inkEngineRuntime from './bin/Release/netcoreapp3.0/ink-engine-runtime.dll';
 import inklecateWasm from './bin/Release/netcoreapp3.0/dist/managed/inklecate_wasm.dll';
@@ -334,8 +337,8 @@ export class ModuleClass extends BaseModule {
     _utime,
     _utimes,
     _waitpid,
-    DYNAMICTOP_PTR,
-    STACKTOP,
+    DYNAMICTOP_PTR: getPointer('DYNAMICTOP_PTR'),
+    STACKTOP: getPointer('STACKTOP'),
     _environ,
   };
 
@@ -352,7 +355,7 @@ export class ModuleClass extends BaseModule {
       }
 
       while (this.preInit!.length) {
-        this.preInit.pop()()
+        this.preInit.pop()();
       }
     }
 
@@ -450,7 +453,7 @@ export class ModuleClass extends BaseModule {
         // @ts-ignore
         read,
         'The environment is Shell, but the "read" function cannot be found.',
-      )(filename, binary)
+      )(filename, binary);
     } else if (
       envType === EnvironmentTypes.Web ||
         envType === EnvironmentTypes.Worker
@@ -602,7 +605,7 @@ export class ModuleClass extends BaseModule {
     })()(text, ...args)
   );
 
-  public readonly abort = (what: string): never | number => {
+  public readonly abort = (what?: string): never | number => {
     if (this.onAbort) {
       this.onAbort(what);
     }
