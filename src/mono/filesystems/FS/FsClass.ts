@@ -25,7 +25,7 @@ export class FsClass extends BaseFs {
   public readonly ErrnoError: ErrorConstructor = null as any as ErrorConstructor;
   public readonly filesystems = null;
   public readonly genericErrors: Record<string, unknown> = {};
-  public readonly ignorePermissions = true;
+  public ignorePermissions = true;
   public readonly initialized = false;
   public readonly mounts = [];
   public readonly nameTable = null;
@@ -1055,12 +1055,12 @@ export class FsClass extends BaseFs {
     if (stream.stream_ops.open) {
       stream.stream_ops.open(stream)
     }
-    if (ModuleClass['logReadFiles'] && !(flags & 1)) {
+    if (Module['logReadFiles'] && !(flags & 1)) {
       if (!this.readFiles)
         this.readFiles = {};
       if (!(path in this.readFiles)) {
         this.readFiles[path] = 1;
-        ModuleClass['printErr']('read file: ' + path)
+        Module['printErr']('read file: ' + path)
       }
     }
     try {
@@ -1350,18 +1350,18 @@ export class FsClass extends BaseFs {
   }
   ),
   createStandardStreams: (function() {
-    if (ModuleClass['stdin']) {
-      this.createDevice('/dev', 'stdin', ModuleClass['stdin'])
+    if (Module['stdin']) {
+      this.createDevice('/dev', 'stdin', Module['stdin'])
     } else {
       this.symlink('/dev/tty', '/dev/stdin')
     }
-    if (ModuleClass['stdout']) {
-      this.createDevice('/dev', 'stdout', null, ModuleClass['stdout'])
+    if (Module['stdout']) {
+      this.createDevice('/dev', 'stdout', null, Module['stdout'])
     } else {
       this.symlink('/dev/tty', '/dev/stdout')
     }
-    if (ModuleClass['stderr']) {
-      this.createDevice('/dev', 'stderr', null, ModuleClass['stderr'])
+    if (Module['stderr']) {
+      this.createDevice('/dev', 'stderr', null, Module['stderr'])
     } else {
       this.symlink('/dev/tty1', '/dev/stderr')
     }
@@ -1425,15 +1425,15 @@ export class FsClass extends BaseFs {
     assert(!this.init.initialized, 'this.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)');
     this.init.initialized = true;
     this.ensureErrnoError();
-    ModuleClass['stdin'] = input || ModuleClass['stdin'];
-    ModuleClass['stdout'] = output || ModuleClass['stdout'];
-    ModuleClass['stderr'] = error || ModuleClass['stderr'];
+    Module['stdin'] = input || Module['stdin'];
+    Module['stdout'] = output || Module['stdout'];
+    Module['stderr'] = error || Module['stderr'];
     this.createStandardStreams()
   }
   ),
   quit: (function() {
     this.init.initialized = false;
-    var fflush = ModuleClass['_fflush'];
+    var fflush = Module['_fflush'];
     if (fflush)
       fflush(0);
     for (var i = 0; i < this.streams.length; i++) {
@@ -1636,9 +1636,9 @@ export class FsClass extends BaseFs {
     var success = true;
     if (typeof XMLHttpRequest !== 'undefined') {
       throw new Error('Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.')
-    } else if (ModuleClass['read']) {
+    } else if (Module['read']) {
       try {
-        obj.contents = intArrayFromString(ModuleClass['read'](obj.url), true);
+        obj.contents = intArrayFromString(Module['read'](obj.url), true);
         obj.usedBytes = obj.contents.length
       } catch (e) {
         success = false
@@ -1832,7 +1832,7 @@ export class FsClass extends BaseFs {
         removeRunDependency(dep)
       }
       var handled = false;
-      ModuleClass['preloadPlugins'].forEach((function(plugin) {
+      Module['preloadPlugins'].forEach((function(plugin) {
         if (handled)
           return;
         if (plugin['canHandle'](fullname)) {

@@ -10,11 +10,13 @@ import {
 import {
   assert,
 } from 'ts-assertions';
+import { EnvironmentTypes } from '../../EnvironmentTypes';
+import { ErrorNumberCodes } from '../../errors/ErrorNumberCodes';
 
 const BaseSockFs = getGlobalValue('this') || {};
 
 export class SockFsClass extends BaseSockFs {
-  public readonly mount = (mount) => {
+  public readonly mount = (mount: any) => {
     Module.websocket = Module.websocket && typeof Module.websocket === 'object' ?
       Module.websocket :
       {};
@@ -37,13 +39,13 @@ export class SockFsClass extends BaseSockFs {
     return FS.createNode(null, '/', 16384 | 511, 0);
   };
 
-  createSocket = (family, type, protocol) => {
+  createSocket = (family: any, type: any, protocol: any) => {
     const streaming = type == 1;
     if (protocol) {
       assert(streaming === (protocol === 6));
     }
 
-    const sock = {
+    const sock: Record<string, any> = {
       family,
       protocol,
       type,
@@ -68,162 +70,180 @@ export class SockFsClass extends BaseSockFs {
 
     sock.stream = stream;
     return sock
-  }
-  ),
-  getSocket: (function(fd) {
-    var stream = FS.getStream(fd);
+  };
+
+  getSocket = (fd: number) => {
+    const stream = FS.getStream(fd);
     if (!stream || !FS.isSocket(stream.node.mode)) {
-      return null
+      return null;
     }
-    return stream.node.sock
-  }
-  ),
-  stream_ops: {
-    poll: (function(stream) {
-      var sock = stream.node.sock;
-      return sock.sock_ops.poll(sock)
-    }
-    ),
-    ioctl: (function(stream, request, varargs) {
-      var sock = stream.node.sock;
-      return sock.sock_ops.ioctl(sock, request, varargs)
-    }
-    ),
-    read: (function(stream, buffer, offset, length, position) {
+
+    return stream.node.sock;
+  };
+
+  stream_ops = {
+    poll: function (stream: any) {
+      const sock = stream.node.sock;
+      return sock.sock_ops.poll(sock);
+    },
+
+    ioctl: function (stream: any, request: any, varargs: any) {
+      const sock = stream.node.sock;
+      return sock.sock_ops.ioctl(sock, request, varargs);
+    },
+
+    read: function (stream: any, buffer: any, offset: any, length: any, position: any) {
       var sock = stream.node.sock;
       var msg = sock.sock_ops.recvmsg(sock, length);
       if (!msg) {
-        return 0
+        return 0;
       }
       buffer.set(msg.buffer, offset);
-      return msg.buffer.length
-    }
-    ),
-    write: (function(stream, buffer, offset, length, position) {
+      return msg.buffer.length;
+    },
+
+    write: function (stream: any, buffer: any, offset: any, length: any, position: any) {
       var sock = stream.node.sock;
-      return sock.sock_ops.sendmsg(sock, buffer, offset, length)
-    }
-    ),
-    close: (function(stream) {
+      return sock.sock_ops.sendmsg(sock, buffer, offset, length);
+    },
+
+    close: function (stream: any) {
       var sock = stream.node.sock;
       sock.sock_ops.close(sock)
-    }
-    )
-  },
-  nextname: (function() {
+    },
+  };
+
+  nextname = (): any => {
+    // @ts-ignore
     if (!this.nextname.current) {
-      this.nextname.current = 0
+      // @ts-ignore
+      this.nextname.current = 0;
     }
+
+    // @ts-ignore
     return 'socket[' + this.nextname.current++ + ']'
-  }
-  ),
-  websocket_sock_ops: {
-    createPeer: (function(sock, addr, port) {
-      var ws;
+  };
+
+  websocket_sock_ops = {
+    createPeer: function (sock: any, addr: any, port: any) {
+      let ws;
       if (typeof addr === 'object') {
         ws = addr;
         addr = null;
-        port = null
+        port = null;
       }
+
       if (ws) {
         if (ws._socket) {
           addr = ws._socket.remoteAddress;
           port = ws._socket.remotePort
         } else {
-          var result = /ws[s]?:\/\/([^:]+):(\d+)/.exec(ws.url);
+          const result = /ws[s]?:\/\/([^:]+):(\d+)/.exec(ws.url);
           if (!result) {
             throw new Error('WebSocket URL must be in the format ws(s)://address:port')
           }
+
           addr = result[1];
-          port = parseInt(result[2], 10)
+          port = parseInt(result[2], 10);
         }
       } else {
         try {
-          var runtimeConfig = Module['websocket'] && 'object' === typeof Module['websocket'];
-          var url = 'ws:#'.replace('#', '//');
+          const runtimeConfig = Module['websocket'] && 'object' === typeof Module['websocket'];
+          let url = 'ws:#'.replace('#', '//');
           if (runtimeConfig) {
             if ('string' === typeof Module['websocket']['url']) {
               url = Module['websocket']['url']
             }
           }
+
           if (url === 'ws://' || url === 'wss://') {
             var parts = addr.split('/');
             url = url + parts[0] + ':' + port + '/' + parts.slice(1).join('/')
           }
-          var subProtocols = 'binary';
+
+          let subProtocols: string | string[] = 'binary';
           if (runtimeConfig) {
             if ('string' === typeof Module['websocket']['subprotocol']) {
               subProtocols = Module['websocket']['subprotocol']
             }
           }
-          subProtocols = subProtocols.replace(/^ +| +$/g, '').split(/ *, */);
-          var opts = ENVIRONMENT_IS_NODE ? {
+
+          subProtocols = (subProtocols as string).replace(/^ +| +$/g, '').split(/ *, */);
+          let opts: string[] | Record<string, any> | undefined = envType === EnvironmentTypes.Node ? {
             'protocol': subProtocols.toString()
           } : subProtocols;
-          if (runtimeConfig && null === Module['websocket']['subprotocol']) {
+
+          if (runtimeConfig && null === Module.websocket.subprotocol) {
             subProtocols = 'null';
-            opts = undefined
+            opts = undefined;
           }
+
           var WebSocketConstructor;
-          if (ENVIRONMENT_IS_NODE) {
+          if (envType === EnvironmentTypes.Node) {
             WebSocketConstructor = require('ws')
-          } else if (ENVIRONMENT_IS_WEB) {
-            WebSocketConstructor = window['WebSocket']
+          } else if (envType === EnvironmentTypes.Web) {
+            // @ts-ignore
+            WebSocketConstructor = window.WebSocket;
           } else {
             WebSocketConstructor = WebSocket
           }
-          ws = new WebSocketConstructor(url,opts);
-          ws.binaryType = 'arraybuffer'
+
+          ws = new WebSocketConstructor(url, opts);
+          ws.binaryType = 'arraybuffer';
         } catch (e) {
-          throw new FS.ErrnoError(ERRNO_CODES.EHOSTUNREACH)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.EHOSTUNREACH));
         }
       }
-      var peer = {
+
+      const peer = {
         addr: addr,
         port: port,
         socket: ws,
         dgram_send_queue: []
       };
+
       this.websocket_sock_ops.addPeer(sock, peer);
       this.websocket_sock_ops.handlePeerEvents(sock, peer);
       if (sock.type === 2 && typeof sock.sport !== 'undefined') {
         peer.dgram_send_queue.push(new Uint8Array([255, 255, 255, 255, 'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0), (sock.sport & 65280) >> 8, sock.sport & 255]))
       }
-      return peer
-    }
-    ),
-    getPeer: (function(sock, addr, port) {
-      return sock.peers[addr + ':' + port]
-    }
-    ),
-    addPeer: (function(sock, peer) {
-      sock.peers[peer.addr + ':' + peer.port] = peer
-    }
-    ),
-    removePeer: (function(sock, peer) {
-      delete sock.peers[peer.addr + ':' + peer.port]
-    }
-    ),
-    handlePeerEvents: (function(sock, peer) {
-      var first = true;
-      var handleOpen = (function() {
-        Module['websocket'].emit('open', sock.stream.fd);
+
+      return peer;
+    },
+
+    getPeer: (sock: any, addr: any, port: any) => {
+      return sock.peers[addr + ':' + port];
+    },
+
+    addPeer: (sock: any, peer: any) => {
+      sock.peers[peer.addr + ':' + peer.port] = peer;
+    },
+
+    removePeer: function(sock: any, peer: any) {
+      delete sock.peers[peer.addr + ':' + peer.port];
+    },
+
+    handlePeerEvents: function (sock: any, peer: any) {
+      let first = true;
+      const handleOpen = function() {
+        Module.websocket.emit('open', sock.stream.fd);
         try {
           var queued = peer.dgram_send_queue.shift();
           while (queued) {
             peer.socket.send(queued);
-            queued = peer.dgram_send_queue.shift()
+            queued = peer.dgram_send_queue.shift();
           }
         } catch (e) {
-          peer.socket.close()
+          peer.socket.close();
         }
-      }
-      );
-      function handleMessage(data) {
+      };
+
+      const handleMessage = (data: any) => {
         assert(typeof data !== 'string' && data.byteLength !== undefined);
         if (data.byteLength == 0) {
-          return
+          return;
         }
+
         data = new Uint8Array(data);
         var wasfirst = first;
         first = false;

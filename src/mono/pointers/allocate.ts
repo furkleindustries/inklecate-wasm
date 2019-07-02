@@ -28,7 +28,8 @@ export const allocate = (
   slab: number | number[],
   types: string | string[],
   allocator: number,
-  ptr: number,
+  // no idea if = 0 is right???
+  ptr: number = 0,
 ) => {
   let zeroFill;
   let size;

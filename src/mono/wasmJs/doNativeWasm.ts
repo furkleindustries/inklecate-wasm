@@ -30,7 +30,7 @@ const [
 ] = getMonoWasmFilePaths();
 
 export const doNativeWasm = (
-  global: never,
+  global: any,
   env: any,
   providedBuffer: Buffer,
 ) => {
