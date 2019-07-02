@@ -12,7 +12,7 @@ import {
 } from '../../_malloc';
 import {
   throwFromErrorNumber,
-} from '../../TTY';
+} from '../../TTYClass';
 import {
   assertValid,
 } from 'ts-assertions';
@@ -329,7 +329,7 @@ export class MemfsClass extends BaseMemfs {
         return 0;
       }
 
-      const size = assertValid(
+      const size = assertValid<number>(
         Math.min(node.usedBytes - position, length),
         'The size of the MEMFS value was negative.',
         (value) => value >= 0,

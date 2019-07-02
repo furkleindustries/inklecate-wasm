@@ -186,7 +186,7 @@ export class FsClass extends BaseFs {
     return this.lookup(parent, name)
   };
 
-  public readonly createNode = (parent, name, mode, rdev) => {
+  public readonly createNode = (parent: any, name: any, mode: any, rdev?: any) => {
     if (!this.FSNode) {
       this.FSNode = (function(parent, name, mode, rdev) {
         if (!parent) {

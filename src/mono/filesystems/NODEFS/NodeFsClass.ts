@@ -26,7 +26,7 @@ import {
 } from 'ts-assertions';
 import {
   throwFromErrorNumber,
-} from '../../TTY';
+} from '../../TTYClass';
 
 const envType = getEnvType(Module.ENVIRONMENT);
 

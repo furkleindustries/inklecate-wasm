@@ -1,6 +1,15 @@
 import {
+  EnvironmentTypes,
+} from '../../EnvironmentTypes';
+import {
+  ErrorNumberCodes,
+} from '../../errors/ErrorNumberCodes';
+import {
   FS,
 } from '../FS/FS';
+import {
+  getEnvType,
+} from '../../getEnvVars';
 import {
   getGlobalValue,
 } from '../../getGlobalValue';
@@ -10,8 +19,9 @@ import {
 import {
   assert,
 } from 'ts-assertions';
-import { EnvironmentTypes } from '../../EnvironmentTypes';
-import { ErrorNumberCodes } from '../../errors/ErrorNumberCodes';
+import { getHeap } from '../../heaps/heaps';
+
+const envType = getEnvType(Module.ENVIRONMENT);
 
 const BaseSockFs = getGlobalValue('this') || {};
 
@@ -82,32 +92,33 @@ export class SockFsClass extends BaseSockFs {
   };
 
   stream_ops = {
-    poll: function (stream: any) {
+    poll: (stream: any) => {
       const sock = stream.node.sock;
       return sock.sock_ops.poll(sock);
     },
 
-    ioctl: function (stream: any, request: any, varargs: any) {
+    ioctl: (stream: any, request: any, varargs: any) => {
       const sock = stream.node.sock;
       return sock.sock_ops.ioctl(sock, request, varargs);
     },
 
-    read: function (stream: any, buffer: any, offset: any, length: any, position: any) {
-      var sock = stream.node.sock;
-      var msg = sock.sock_ops.recvmsg(sock, length);
+    read: (stream: any, buffer: any, offset: any, length: any, position: any) => {
+      const sock = stream.node.sock;
+      const msg = sock.sock_ops.recvmsg(sock, length);
       if (!msg) {
         return 0;
       }
+
       buffer.set(msg.buffer, offset);
       return msg.buffer.length;
     },
 
-    write: function (stream: any, buffer: any, offset: any, length: any, position: any) {
+    write: (stream: any, buffer: any, offset: any, length: any, position: any) => {
       var sock = stream.node.sock;
       return sock.sock_ops.sendmsg(sock, buffer, offset, length);
     },
 
-    close: function (stream: any) {
+    close: (stream: any) => {
       var sock = stream.node.sock;
       sock.sock_ops.close(sock)
     },
@@ -125,7 +136,7 @@ export class SockFsClass extends BaseSockFs {
   };
 
   websocket_sock_ops = {
-    createPeer: function (sock: any, addr: any, port: any) {
+    createPeer: (sock: any, addr: any, port?: any) => {
       let ws;
       if (typeof addr === 'object') {
         ws = addr;
@@ -195,11 +206,11 @@ export class SockFsClass extends BaseSockFs {
         }
       }
 
-      const peer = {
-        addr: addr,
-        port: port,
+      const peer: Record<string, any> = {
+        addr,
+        port,
         socket: ws,
-        dgram_send_queue: []
+        dgram_send_queue: [],
       };
 
       this.websocket_sock_ops.addPeer(sock, peer);
@@ -219,16 +230,16 @@ export class SockFsClass extends BaseSockFs {
       sock.peers[peer.addr + ':' + peer.port] = peer;
     },
 
-    removePeer: function(sock: any, peer: any) {
+    removePeer: (sock: any, peer: any) => {
       delete sock.peers[peer.addr + ':' + peer.port];
     },
 
-    handlePeerEvents: function (sock: any, peer: any) {
+    handlePeerEvents: (sock: any, peer: any) => {
       let first = true;
       const handleOpen = function() {
         Module.websocket.emit('open', sock.stream.fd);
         try {
-          var queued = peer.dgram_send_queue.shift();
+          let queued = peer.dgram_send_queue.shift();
           while (queued) {
             peer.socket.send(queued);
             queued = peer.dgram_send_queue.shift();
@@ -245,249 +256,296 @@ export class SockFsClass extends BaseSockFs {
         }
 
         data = new Uint8Array(data);
-        var wasfirst = first;
+        let wasfirst = first;
         first = false;
         if (wasfirst && data.length === 10 && data[0] === 255 && data[1] === 255 && data[2] === 255 && data[3] === 255 && data[4] === 'p'.charCodeAt(0) && data[5] === 'o'.charCodeAt(0) && data[6] === 'r'.charCodeAt(0) && data[7] === 't'.charCodeAt(0)) {
           var newport = data[8] << 8 | data[9];
           this.websocket_sock_ops.removePeer(sock, peer);
           peer.port = newport;
           this.websocket_sock_ops.addPeer(sock, peer);
-          return
+          return;
         }
+
         sock.recv_queue.push({
           addr: peer.addr,
           port: peer.port,
           data: data
         });
-        Module['websocket'].emit('message', sock.stream.fd)
+
+        Module.websocket.emit('message', sock.stream.fd);
       }
-      if (ENVIRONMENT_IS_NODE) {
+
+      if (envType === EnvironmentTypes.Node) {
         peer.socket.on('open', handleOpen);
-        peer.socket.on('message', (function(data, flags) {
+        peer.socket.on('message', (data: Buffer, flags: any) => {
           if (!flags.binary) {
-            return
+            return;
           }
+
           handleMessage((new Uint8Array(data)).buffer)
-        }
-        ));
+        });
+
         peer.socket.on('close', (function() {
           Module['websocket'].emit('close', sock.stream.fd)
         }
         ));
-        peer.socket.on('error', (function(error) {
-          sock.error = ERRNO_CODES.ECONNREFUSED;
-          Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'ECONNREFUSED: Connection refused'])
-        }
-        ))
+        peer.socket.on('error', (error: Error) => {
+          sock.error = ErrorNumberCodes.ECONNREFUSED;
+          Module.websocket.emit(
+            'error',
+            [
+              sock.stream.fd,
+              sock.error,
+              'ECONNREFUSED: Connection refused.',
+            ],
+          );
+        });
       } else {
         peer.socket.onopen = handleOpen;
-        peer.socket.onclose = (function() {
-          Module['websocket'].emit('close', sock.stream.fd)
-        }
-        );
-        peer.socket.onmessage = function peer_socket_onmessage(event) {
+        peer.socket.onclose = () => {
+          Module.websocket.emit('close', sock.stream.fd);
+        };
+
+        peer.socket.onmessage = (event: any) => {
           handleMessage(event.data)
-        }
-        ;
-        peer.socket.onerror = (function(error) {
-          sock.error = ERRNO_CODES.ECONNREFUSED;
-          Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'ECONNREFUSED: Connection refused'])
-        }
-        )
+        };
+
+        peer.socket.onerror = (error: Error) => {
+          sock.error = ErrorNumberCodes.ECONNREFUSED;
+          Module.websocket.emit(
+            'error',
+            [
+              sock.stream.fd,
+              sock.error,
+              'ECONNREFUSED: Connection refused',
+            ],
+          );
+        };
       }
-    }
-    ),
-    poll: (function(sock) {
+    },
+
+    poll: (sock: any) => {
       if (sock.type === 1 && sock.server) {
-        return sock.pending.length ? 64 | 1 : 0
+        return sock.pending.length ? 64 | 1 : 0;
       }
-      var mask = 0;
-      var dest = sock.type === 1 ? this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport) : null;
+
+      let mask = 0;
+      let dest = sock.type === 1 ? this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport) : null;
       if (sock.recv_queue.length || !dest || dest && dest.socket.readyState === dest.socket.CLOSING || dest && dest.socket.readyState === dest.socket.CLOSED) {
-        mask |= 64 | 1
+        mask |= 64 | 1;
       }
+
       if (!dest || dest && dest.socket.readyState === dest.socket.OPEN) {
-        mask |= 4
+        mask |= 4;
       }
+
       if (dest && dest.socket.readyState === dest.socket.CLOSING || dest && dest.socket.readyState === dest.socket.CLOSED) {
-        mask |= 16
+        mask |= 16;
       }
-      return mask
-    }
-    ),
-    ioctl: (function(sock, request, arg) {
+
+      return mask;
+    },
+
+    ioctl: (sock: any, request: any, arg: any) => {
       switch (request) {
       case 21531:
         var bytes = 0;
         if (sock.recv_queue.length) {
           bytes = sock.recv_queue[0].data.length
         }
-        HEAP32[arg >> 2] = bytes;
+        getHeap('HEAP32')[arg >> 2] = bytes;
         return 0;
       default:
-        return ERRNO_CODES.EINVAL
+        return ErrorNumberCodes.EINVAL;
       }
-    }
-    ),
-    close: (function(sock) {
+    },
+
+    close: (sock: any) => {
       if (sock.server) {
         try {
-          sock.server.close()
+          sock.server.close();
         } catch (e) {}
-        sock.server = null
+        sock.server = null;
       }
-      var peers = Object.keys(sock.peers);
-      for (var i = 0; i < peers.length; i++) {
-        var peer = sock.peers[peers[i]];
+
+      let peers = Object.keys(sock.peers);
+      for (let ii = 0; ii < peers.length; ii += 1) {
+        var peer = sock.peers[peers[ii]];
         try {
-          peer.socket.close()
+          peer.socket.close();
         } catch (e) {}
-        this.websocket_sock_ops.removePeer(sock, peer)
+        this.websocket_sock_ops.removePeer(sock, peer);
       }
-      return 0
-    }
-    ),
-    bind: (function(sock, addr, port) {
+
+      return 0;
+    },
+
+    bind: (sock: any, addr: any, port: any) => {
       if (typeof sock.saddr !== 'undefined' || typeof sock.sport !== 'undefined') {
-        throw new FS.ErrnoError(ERRNO_CODES.EINVAL)
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EINVAL));
       }
+
       sock.saddr = addr;
       sock.sport = port;
       if (sock.type === 2) {
         if (sock.server) {
           sock.server.close();
-          sock.server = null
+          sock.server = null;
         }
+
         try {
-          sock.sock_ops.listen(sock, 0)
-        } catch (e) {
-          if (!(e instanceof FS.ErrnoError))
-            throw e;
-          if (e.errno !== ERRNO_CODES.EOPNOTSUPP)
-            throw e
-        }
-      }
-    }
-    ),
-    connect: (function(sock, addr, port) {
-      if (sock.server) {
-        throw new FS.ErrnoError(ERRNO_CODES.EOPNOTSUPP)
-      }
-      if (typeof sock.daddr !== 'undefined' && typeof sock.dport !== 'undefined') {
-        var dest = this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
-        if (dest) {
-          if (dest.socket.readyState === dest.socket.CONNECTING) {
-            throw new FS.ErrnoError(ERRNO_CODES.EALREADY)
-          } else {
-            throw new FS.ErrnoError(ERRNO_CODES.EISCONN)
+          sock.sock_ops.listen(sock,  0);
+        } catch (err) {
+          if (!(err instanceof FS.ErrnoError)) {
+            throw err;
+          } else if (
+            // @ts-ignore
+            err.errno !== ErrorNumberCodes.EOPNOTSUPP) {
+            throw err;
           }
         }
       }
-      var peer = this.websocket_sock_ops.createPeer(sock, addr, port);
+    },
+
+    connect: (sock: any, addr: any, port: any) => {
+      if (sock.server) {
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EOPNOTSUPP));
+      }
+
+      if (typeof sock.daddr !== 'undefined' && typeof sock.dport !== 'undefined') {
+        let dest = this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
+        if (dest) {
+          if (dest.socket.readyState === dest.socket.CONNECTING) {
+            throw new FS.ErrnoError(String(ErrorNumberCodes.EALREADY));
+          } else {
+            throw new FS.ErrnoError(String(ErrorNumberCodes.EISCONN));
+          }
+        }
+      }
+
+      const peer = this.websocket_sock_ops.createPeer(sock, addr, port);
       sock.daddr = peer.addr;
       sock.dport = peer.port;
-      throw new FS.ErrnoError(ERRNO_CODES.EINPROGRESS)
-    }
-    ),
-    listen: (function(sock, backlog) {
-      if (!ENVIRONMENT_IS_NODE) {
-        throw new FS.ErrnoError(ERRNO_CODES.EOPNOTSUPP)
+      throw new FS.ErrnoError(String(ErrorNumberCodes.EINPROGRESS));
+    },
+
+    listen: (sock: any, backlog: any) => {
+      if (envType !== EnvironmentTypes.Node) {
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EOPNOTSUPP));
       }
+
       if (sock.server) {
-        throw new FS.ErrnoError(ERRNO_CODES.EINVAL)
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EINVAL));
       }
-      var WebSocketServer = require('ws').Server;
-      var host = sock.saddr;
+
+      const WebSocketServer = require('ws').Server;
+      const host = sock.saddr;
       sock.server = new WebSocketServer({
         host: host,
         port: sock.sport
       });
-      Module['websocket'].emit('listen', sock.stream.fd);
-      sock.server.on('connection', (function(ws) {
+
+      Module.websocket.emit('listen', sock.stream.fd);
+      sock.server.on('connection', (ws: any) => {
         if (sock.type === 1) {
-          var newsock = this.createSocket(sock.family, sock.type, sock.protocol);
-          var peer = this.websocket_sock_ops.createPeer(newsock, ws);
+          const newsock = this.createSocket(sock.family, sock.type, sock.protocol);
+          const peer = this.websocket_sock_ops.createPeer(newsock, ws);
           newsock.daddr = peer.addr;
           newsock.dport = peer.port;
           sock.pending.push(newsock);
-          Module['websocket'].emit('connection', newsock.stream.fd)
+          Module.websocket.emit('connection', newsock.stream.fd);
         } else {
           this.websocket_sock_ops.createPeer(sock, ws);
-          Module['websocket'].emit('connection', sock.stream.fd)
+          Module.websocket.emit('connection', sock.stream.fd);
         }
-      }
-      ));
-      sock.server.on('closed', (function() {
+      });
+
+      sock.server.on('closed', () => {
         Module['websocket'].emit('close', sock.stream.fd);
         sock.server = null
-      }
-      ));
-      sock.server.on('error', (function(error) {
-        sock.error = ERRNO_CODES.EHOSTUNREACH;
-        Module['websocket'].emit('error', [sock.stream.fd, sock.error, 'EHOSTUNREACH: Host is unreachable'])
-      }
-      ))
-    }
-    ),
-    accept: (function(listensock) {
+      });
+
+      sock.server.on('error', (error: any) => {
+        sock.error = ErrorNumberCodes.EHOSTUNREACH;
+        Module.websocket.emit(
+          'error',
+          [
+            sock.stream.fd,
+            sock.error,
+            'EHOSTUNREACH: Host is unreachable',
+          ],
+        );
+      });
+    },
+
+    accept: (listensock: any) => {
       if (!listensock.server) {
-        throw new FS.ErrnoError(ERRNO_CODES.EINVAL)
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EINVAL));
       }
-      var newsock = listensock.pending.shift();
+
+      const newsock = listensock.pending.shift();
       newsock.stream.flags = listensock.stream.flags;
-      return newsock
-    }
-    ),
-    getname: (function(sock, peer) {
-      var addr, port;
+      return newsock;
+    },
+
+    getname: (sock: any, peer: any) => {
+      let addr;
+      let port;
       if (peer) {
         if (sock.daddr === undefined || sock.dport === undefined) {
-          throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.ENOTCONN));
         }
+
         addr = sock.daddr;
-        port = sock.dport
+        port = sock.dport;
       } else {
         addr = sock.saddr || 0;
-        port = sock.sport || 0
+        port = sock.sport || 0;
       }
+
       return {
-        addr: addr,
-        port: port
-      }
-    }
-    ),
-    sendmsg: (function(sock, buffer, offset, length, addr, port) {
+        addr,
+        port,
+      };
+    },
+
+    sendmsg: (sock: any, buffer: any, offset: any, length: any, addr: any, port: any) => {
       if (sock.type === 2) {
         if (addr === undefined || port === undefined) {
           addr = sock.daddr;
-          port = sock.dport
+          port = sock.dport;
         }
+
         if (addr === undefined || port === undefined) {
-          throw new FS.ErrnoError(ERRNO_CODES.EDESTADDRREQ)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.EDESTADDRREQ));
         }
       } else {
         addr = sock.daddr;
         port = sock.dport
       }
-      var dest = this.websocket_sock_ops.getPeer(sock, addr, port);
+
+      let dest = this.websocket_sock_ops.getPeer(sock, addr, port);
       if (sock.type === 1) {
         if (!dest || dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
-          throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.ENOTCONN));
         } else if (dest.socket.readyState === dest.socket.CONNECTING) {
-          throw new FS.ErrnoError(ERRNO_CODES.EAGAIN)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.EAGAIN));
         }
       }
+
       if (ArrayBuffer.isView(buffer)) {
         offset += buffer.byteOffset;
         buffer = buffer.buffer
       }
-      var data;
+
+      let data;
       data = buffer.slice(offset, offset + length);
       if (sock.type === 2) {
         if (!dest || dest.socket.readyState !== dest.socket.OPEN) {
           if (!dest || dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
             dest = this.websocket_sock_ops.createPeer(sock, addr, port)
           }
+
           dest.dgram_send_queue.push(data);
           return length
         }
@@ -496,45 +554,48 @@ export class SockFsClass extends BaseSockFs {
         dest.socket.send(data);
         return length
       } catch (e) {
-        throw new FS.ErrnoError(ERRNO_CODES.EINVAL)
+        throw new FS.ErrnoError(String(ErrorNumberCodes.EINVAL));
       }
-    }
-    ),
-    recvmsg: (function(sock, length) {
+    },
+
+    recvmsg: (sock: any, length: any) => {
       if (sock.type === 1 && sock.server) {
-        throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN)
+        throw new FS.ErrnoError(String(ErrorNumberCodes.ENOTCONN));
       }
-      var queued = sock.recv_queue.shift();
+
+      const queued = sock.recv_queue.shift();
       if (!queued) {
         if (sock.type === 1) {
-          var dest = this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
+          const dest = this.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
           if (!dest) {
-            throw new FS.ErrnoError(ERRNO_CODES.ENOTCONN)
+            throw new FS.ErrnoError(String(ErrorNumberCodes.ENOTCONN));
           } else if (dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
-            return null
+            return null;
           } else {
-            throw new FS.ErrnoError(ERRNO_CODES.EAGAIN)
+            throw new FS.ErrnoError(String(ErrorNumberCodes.EAGAIN));
           }
         } else {
-          throw new FS.ErrnoError(ERRNO_CODES.EAGAIN)
+          throw new FS.ErrnoError(String(ErrorNumberCodes.EAGAIN));
         }
       }
-      var queuedLength = queued.data.byteLength || queued.data.length;
-      var queuedOffset = queued.data.byteOffset || 0;
-      var queuedBuffer = queued.data.buffer || queued.data;
-      var bytesRead = Math.min(length, queuedLength);
-      var res = {
+
+      const queuedLength = queued.data.byteLength || queued.data.length;
+      const queuedOffset = queued.data.byteOffset || 0;
+      const queuedBuffer = queued.data.buffer || queued.data;
+      const bytesRead = Math.min(length, queuedLength);
+      const res = {
         buffer: new Uint8Array(queuedBuffer,queuedOffset,bytesRead),
         addr: queued.addr,
-        port: queued.port
+        port: queued.port,
       };
+
       if (sock.type === 1 && bytesRead < queuedLength) {
-        var bytesRemaining = queuedLength - bytesRead;
+        const bytesRemaining = queuedLength - bytesRead;
         queued.data = new Uint8Array(queuedBuffer,queuedOffset + bytesRead,bytesRemaining);
         sock.recv_queue.unshift(queued)
       }
-      return res
-    }
-    )
-  }
+
+      return res;
+    },
+  };
 }

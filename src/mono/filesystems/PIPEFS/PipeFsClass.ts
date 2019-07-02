@@ -15,7 +15,8 @@ import {
 } from 'ts-assertions';
 import {
   throwFromErrorNumber,
-} from '../../TTY';
+} from '../../TTYClass';
+
 
 /* TODO: remove the ! null-ignoring operators throughout file. */
 

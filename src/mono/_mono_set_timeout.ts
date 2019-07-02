@@ -9,7 +9,7 @@ import {
 } from './Module';
 import {
   MONO,
-} from './MonoClass';
+} from './MONOObj';
 
 const envType = getEnvType(Module.ENVIRONMENT);
 
