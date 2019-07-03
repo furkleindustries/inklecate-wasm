@@ -15,7 +15,7 @@ import {
 } from '../../logging/stackTrace';
 import {
   throwFromErrorNumber,
-} from '../../TTY';
+} from '../../TTYClass';
 
 export const BaseFs = getGlobalValue('FS') || {};
 
@@ -27,11 +27,11 @@ export class FsClass extends BaseFs {
   public readonly genericErrors: Record<string, unknown> = {};
   public ignorePermissions = true;
   public readonly initialized = false;
-  public readonly mounts = [];
+  public readonly mounts: any[] = [];
   public readonly nameTable = null;
   public readonly nextInode = 1;
   public readonly root = null;
-  public readonly streams = [];
+  public readonly streams: any[] = [];
   public readonly syncFSRequests = 0;
   public readonly tracking = {
     openFlags: {
@@ -262,23 +262,15 @@ export class FsClass extends BaseFs {
 
   public readonly isLink = (mode: number) => (mode & 61440) === 40960;
 
-  isChrdev: (function(mode) {
-    return (mode & 61440) === 8192
-  }
-  ),
-  isBlkdev: (function(mode) {
-    return (mode & 61440) === 24576
-  }
-  ),
-  isFIFO: (function(mode) {
-    return (mode & 61440) === 4096
-  }
-  ),
-  isSocket: (function(mode) {
-    return (mode & 49152) === 49152
-  }
-  ),
-  flagModes: {
+  public readonly isChrdev = (mode: number) => (mode & 61440) === 8192;
+
+  public readonly isBlkdev = (mode: number) => (mode & 61440) === 24576;
+
+  public readonly isFIFO = (mode: number) => (mode & 61440) === 4096;
+
+  public readonly isSocket = (mode: number) => (mode & 49152) === 49152;
+
+  public readonly flagModes = {
     'r': 0,
     'rs': 1052672,
     'r+': 2,
@@ -293,148 +285,147 @@ export class FsClass extends BaseFs {
     'xa': 1217,
     'a+': 1090,
     'ax+': 1218,
-    'xa+': 1218
-  },
-  modeStringToFlags: (function(str) {
-    var flags = this.flagModes[str];
+    'xa+': 1218,
+  };
+
+  public readonly modeStringToFlags = (str: string) => {
+    const flags = this.flagModes[str];
     if (typeof flags === 'undefined') {
-      throw new Error('Unknown file open mode: ' + str)
+      throw new Error('Unknown file open mode: ' + str);
     }
-    return flags
-  }
-  ),
-  flagsToPermissionString: (function(flag) {
-    var perms = ['r', 'w', 'rw'][flag & 3];
+
+    return flags;
+  };
+
+  public readonly flagsToPermissionString = (flag: number) => {
+    let perms = ['r', 'w', 'rw'][flag & 3];
     if (flag & 512) {
       perms += 'w'
     }
-    return perms
-  }
-  ),
-  nodePermissions: (function(node, perms) {
+
+    return perms;
+  };
+
+  public readonly nodePermissions = (node: any, perms: string) => {
     if (this.ignorePermissions) {
-      return 0
-    }
-    if (perms.indexOf('r') !== -1 && !(node.mode & 292)) {
-      return ERRNO_CODES.EACCES
+      return 0;
+    } else if (perms.indexOf('r') !== -1 && !(node.mode & 292)) {
+      return ErrorNumberCodes.EACCES;
     } else if (perms.indexOf('w') !== -1 && !(node.mode & 146)) {
-      return ERRNO_CODES.EACCES
+      return ErrorNumberCodes.EACCES;
     } else if (perms.indexOf('x') !== -1 && !(node.mode & 73)) {
-      return ERRNO_CODES.EACCES
+      return ErrorNumberCodes.EACCES;
     }
-    return 0
-  }
-  ),
-  mayLookup: (function(dir) {
+
+    return 0;
+  };
+
+  public readonly mayLookup = (dir: any) => {
     var err = this.nodePermissions(dir, 'x');
-    if (err)
+    if (err) {
       return err;
-    if (!dir.node_ops.lookup)
-      return ERRNO_CODES.EACCES;
-    return 0
-  }
-  ),
-  mayCreate: (function(dir, name) {
+    } else if (!dir.node_ops.lookup) {
+      return ErrorNumberCodes.EACCES;
+    }
+
+    return 0;
+  };
+
+  public readonly mayCreate = (dir: any, name: any) => {
     try {
       var node = this.lookupNode(dir, name);
-      return ERRNO_CODES.EEXIST
+      return ErrorNumberCodes.EEXIST;
     } catch (e) {}
-    return this.nodePermissions(dir, 'wx')
-  }
-  ),
-  mayDelete: (function(dir, name, isdir) {
-    var node;
+
+    return this.nodePermissions(dir, 'wx');
+  };
+
+  public readonly mayDelete = (dir: any, name: string, isdir: boolean) => {
+    let node;
     try {
-      node = this.lookupNode(dir, name)
+      node = this.lookupNode(dir, name);
     } catch (e) {
-      return e.errno
+      return e.errno;
     }
-    var err = this.nodePermissions(dir, 'wx');
+
+    const err = this.nodePermissions(dir, 'wx');
     if (err) {
-      return err
+      return err;
     }
+
     if (isdir) {
       if (!this.isDir(node.mode)) {
-        return ERRNO_CODES.ENOTDIR
+        return ErrorNumberCodes.ENOTDIR;
+      } else if (this.isRoot(node) || this.getPath(node) === this.cwd()) {
+        return ErrorNumberCodes.EBUSY;
       }
-      if (this.isRoot(node) || this.getPath(node) === this.cwd()) {
-        return ERRNO_CODES.EBUSY
-      }
-    } else {
-      if (this.isDir(node.mode)) {
-        return ERRNO_CODES.EISDIR
-      }
+    } else if (this.isDir(node.mode)) {
+      return ErrorNumberCodes.EISDIR;
     }
-    return 0
-  }
-  ),
-  mayOpen: (function(node, flags) {
+
+    return 0;
+  };
+
+  public readonly mayOpen = (node: any, flags: any) => {
     if (!node) {
-      return ERRNO_CODES.ENOENT
-    }
-    if (this.isLink(node.mode)) {
-      return ERRNO_CODES.ELOOP
+      return ErrorNumberCodes.ENOENT;
+    } else if (this.isLink(node.mode)) {
+      return ErrorNumberCodes.ELOOP;
     } else if (this.isDir(node.mode)) {
       if (this.flagsToPermissionString(flags) !== 'r' || flags & 512) {
-        return ERRNO_CODES.EISDIR
+        return ErrorNumberCodes.EISDIR;
       }
     }
-    return this.nodePermissions(node, this.flagsToPermissionString(flags))
-  }
-  ),
-  MAX_OPEN_FDS: 4096,
-  nextfd: (function(fd_start, fd_end) {
+
+    return this.nodePermissions(node, this.flagsToPermissionString(flags));
+  };
+
+  public readonly MAX_OPEN_FDS = 4096;
+  public readonly nextfd = (fd_start: number, fd_end: number) => {
     fd_start = fd_start || 0;
     fd_end = fd_end || this.MAX_OPEN_FDS;
     for (var fd = fd_start; fd <= fd_end; fd++) {
       if (!this.streams[fd]) {
-        return fd
+        return fd;
       }
     }
-    throw new this.ErrnoError(ERRNO_CODES.EMFILE)
-  }
-  ),
-  getStream: (function(fd) {
+
+    throw new this.ErrnoError(String(ErrorNumberCodes.EMFILE));
+  };
+
+  public readonly getStream (fd: number) {
     return this.streams[fd]
-  }
-  ),
-  createStream: (function(stream, fd_start, fd_end) {
+  };
+
+  public FSStream?: any;
+
+  public node: any;
+
+  public readonly createStream = (stream: any, fd_start: number, fd_end: number) => {
     if (!this.FSStream) {
-      this.FSStream = (function() {}
-      );
+      this.FSStream = () => {};
       this.FSStream.prototype = {};
       Object.defineProperties(this.FSStream.prototype, {
         object: {
-          get: (function() {
-            return this.node
-          }
-          ),
-          set: (function(val) {
-            this.node = val
-          }
-          )
+          get: () => this.node,
+          set: (val) => this.node = val,
         },
+
         isRead: {
-          get: (function() {
-            return (this.flags & 2097155) !== 1
-          }
-          )
+          get: () => (this.flags & 2097155) !== 1,
         },
+
         isWrite: {
-          get: (function() {
-            return (this.flags & 2097155) !== 0
-          }
-          )
+          get: () => (this.flags & 2097155) !== 0,
         },
+
         isAppend: {
-          get: (function() {
-            return this.flags & 1024
-          }
-          )
-        }
+          get: () => this.flags & 1024,
+        },
       })
-    }
-    var newStream = new this.FSStream;
+    };
+
+    const newStream = new this.FSStream();
     for (var p in stream) {
       newStream[p] = stream[p]
     }
@@ -443,12 +434,10 @@ export class FsClass extends BaseFs {
     stream.fd = fd;
     this.streams[fd] = stream;
     return stream
-  }
-  ),
-  closeStream: (function(fd) {
-    this.streams[fd] = null
-  }
-  ),
+  };
+
+  closeStream = (fd: number) => this.streams[fd] = null;
+
   chrdev_stream_ops: {
     open: (function(stream) {
       var device = this.getDevice(stream.node.rdev);

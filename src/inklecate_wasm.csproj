@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Ooui.Wasm" Version="0.10.222" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\lib\ink\compiler\ink_compiler.csproj" />
     <ProjectReference Include="..\lib\ink\ink-engine-runtime\ink-engine-runtime.csproj" />
   </ItemGroup>

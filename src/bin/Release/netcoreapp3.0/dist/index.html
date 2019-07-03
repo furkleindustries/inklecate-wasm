@@ -13,7 +13,7 @@
     <script defer type="text/javascript" src="inklecateEnv.js"></script>
     <script defer type="text/javascript" src="ooui.js"></script>
     <script type="text/javascript">
-        var assemblies = ["inklecate_wasm.dll","mscorlib.dll"];
+        var assemblies = ["ink_compiler.dll","ink-engine-runtime.dll","inklecate_wasm.dll","mscorlib.dll","System.Core.dll","System.dll"];
         document.addEventListener("DOMContentLoaded", function(event) {
             oouiWasm("inklecate_wasm", "inklecate_wasm", "Program", "Main", assemblies);
         });

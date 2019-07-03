@@ -1,0 +1,113 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
+        "projectName": "ink_compiler",
+        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
+        "frameworks": {
+          "net35": {
+            "projectReferences": {
+              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net35": {}
+      }
+    },
+    "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj",
+        "projectName": "ink-engine-runtime",
+        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+      },
+      "frameworks": {
+        "net35": {}
+      }
+    },
+    "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
+        "projectName": "inklecate_wasm",
+        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
+        "packagesPath": "C:\\Users\\furkl\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\furkl\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp3.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp3.0": {
+            "projectReferences": {
+              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
+                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj"
+              },
+              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp3.0": {
+          "dependencies": {
+            "Microsoft.NETCore.App": {
+              "include": "None",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.0.0-preview6-27804-01, )",
+              "autoReferenced": true
+            },
+            "Ooui.Wasm": {
+              "target": "Package",
+              "version": "[0.10.222, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          }
+        }
+      }
+    }
+  }
+}

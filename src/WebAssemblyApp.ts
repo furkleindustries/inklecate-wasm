@@ -2,8 +2,8 @@ import {
   assertValid,
 } from 'ts-assertions';
 
-const getModule = () => require('./Module').Module;
-const getRuntime = () => require('./MonoRuntime').MonoRuntime;
+const getModule = () => require('./mono/Module').Module;
+const getRuntime = () => require('./mono/MonoRuntime').MonoRuntime;
 
 export class WebAssemblyApp {
   public static wasmSession: string;
