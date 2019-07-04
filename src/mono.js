@@ -230,7 +230,7 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
   Module["quit"] = (function(status, toThrow) {
     const err = new Error();
     err.code = status;
-    throw err;
+    return reject(err);
   });
 
   Module["preRun"] = [];
@@ -246,7 +246,7 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
     } else if (Module["ENVIRONMENT"] === "SHELL") {
       ENVIRONMENT_IS_SHELL = true;
     } else {
-      throw new Error("Module['ENVIRONMENT'] value is not valid. must be one of: WEB|WORKER|NODE|SHELL.");
+      return reject(new Error("Module['ENVIRONMENT'] value is not valid. must be one of: WEB|WORKER|NODE|SHELL."));
     }
   }
 
@@ -266,40 +266,47 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       if (!ret.buffer) {
         ret = new Uint8Array(ret)
       }
+
       assert(ret.buffer);
-      return ret
+      return ret;
     };
+
     if (process["argv"].length > 1) {
-      Module["thisProgram"] = process["argv"][1].replace(/\\/g, "/")
+      Module["thisProgram"] = process["argv"][1].replace(/\\/g, "/");
     }
+
     Module["arguments"] = process["argv"].slice(2);
     Module["inspect"] = (function() {
-      return "[Emscripten Module object]"
-    })
+      return "[Emscripten Module object]";
+    });
   } else if (ENVIRONMENT_IS_SHELL) {
     if (typeof read != "undefined") {
       Module["read"] = function shell_read(f) {
-        return read(f)
+        return read(f);
       }
     }
+
     Module["readBinary"] = function readBinary(f) {
       var data;
       if (typeof readbuffer === "function") {
-        return new Uint8Array(readbuffer(f))
+        return new Uint8Array(readbuffer(f));
       }
+
       data = read(f, "binary");
       assert(typeof data === "object");
-      return data
+      return data;
     };
+
     if (typeof scriptArgs != "undefined") {
-      Module["arguments"] = scriptArgs
+      Module["arguments"] = scriptArgs;
     } else if (typeof arguments != "undefined") {
-      Module["arguments"] = arguments
+      Module["arguments"] = arguments;
     }
+
     if (typeof quit === "function") {
       Module["quit"] = (function(status, toThrow) {
         quit(status, toThrow);
-      })
+      });
     }
   } else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     Module["read"] = function shell_read(url) {
@@ -308,6 +315,7 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       xhr.send(null);
       return xhr.responseText
     };
+
     if (ENVIRONMENT_IS_WORKER) {
       Module["readBinary"] = function readBinary(url) {
         var xhr = new XMLHttpRequest;
@@ -317,6 +325,7 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
         return new Uint8Array(xhr.response)
       }
     }
+
     Module["readAsync"] = function readAsync(url, onload, onerror) {
       var xhr = new XMLHttpRequest;
       xhr.open("GET", url, true);
@@ -324,9 +333,10 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       xhr.onload = function xhr_onload() {
         if (xhr.status == 200 || xhr.status == 0 && xhr.response) {
           onload(xhr.response);
-          return
+          return;
         }
-        onerror()
+
+        onerror();
       };
       xhr.onerror = onerror;
       xhr.send(null)
