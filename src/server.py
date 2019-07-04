@@ -1,7 +1,7 @@
 import sys
 
-if sys.version_info[0] == 2:
 
+if sys.version_info[0] == 2:
     import SimpleHTTPServer
     import SocketServer
 
@@ -14,12 +14,10 @@ if sys.version_info[0] == 2:
 
     httpd = SocketServer.TCPServer(("", PORT), Handler)
 
-    print ("python 2 serving at port", PORT)
+    print("python 2 serving at port", PORT)
     httpd.serve_forever()
 
-
 if sys.version_info[0] == 3:
-    
     import http.server
     import socketserver
 
@@ -29,4 +27,3 @@ if sys.version_info[0] == 3:
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
         print("python 3 serving at port", PORT)
         httpd.serve_forever()
-

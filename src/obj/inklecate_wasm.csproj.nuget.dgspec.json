@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {}
+    "c:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {}
   },
   "projects": {
-    "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
+    "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
+        "projectUniqueName": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
         "projectName": "ink_compiler",
-        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
+        "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj",
         "frameworks": {
           "net35": {
             "projectReferences": {
-              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
-                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+              "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+                "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
               }
             }
           }
@@ -24,25 +24,30 @@
         "net35": {}
       }
     },
-    "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+    "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj",
+        "projectUniqueName": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj",
         "projectName": "ink-engine-runtime",
-        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+        "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj",
+        "frameworks": {
+          "net35": {
+            "projectReferences": {}
+          }
+        }
       },
       "frameworks": {
         "net35": {}
       }
     },
-    "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {
+    "c:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
+        "projectUniqueName": "c:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
         "projectName": "inklecate_wasm",
-        "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
+        "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\src\\inklecate_wasm.csproj",
         "packagesPath": "C:\\Users\\furkl\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\src\\obj\\",
+        "outputPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\src\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -61,11 +66,11 @@
         "frameworks": {
           "netcoreapp3.0": {
             "projectReferences": {
-              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
-                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj"
+              "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj": {
+                "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\compiler\\ink_compiler.csproj"
               },
-              "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
-                "projectPath": "C:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
+              "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj": {
+                "projectPath": "c:\\Users\\furkl\\code\\inklecate-wasm\\lib\\ink\\ink-engine-runtime\\ink-engine-runtime.csproj"
               }
             }
           }
