@@ -20,10 +20,9 @@ namespace inklecate_wasm {
     public Story Compile(Options opts) {
       var compiler = new Compiler(opts.inputString, new Compiler.Options{
         pluginNames = pluginNames,
-        countAllVisits = opts.countAllVisits,
         errorHandler = OnError,
         /* File methods are not (and cannot be) used, so this
-          * hopefully won't cause any errors. */
+         * hopefully won't cause any errors. */
         fileHandler = this as IFileHandler,
       });
 

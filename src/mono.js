@@ -96,24 +96,25 @@ const Module = {
   bclLoadingDone: (resolve) => {
     if (debug) console.log('Done loading the Mono Base Class Library.');
     MonoRuntime.init();
-    const compile = (inputStr) => {
+    MonoRuntime.compileInk = (inputStr) => {
       const moduleName = Module.entryPoint.assemblyName;
       const modulePtr = MonoRuntime.assembly_load()(moduleName);
       const nsName = Module.entryPoint.nsName;
       const className = Module.entryPoint.className;
       const classPtr = MonoRuntime.find_class()(modulePtr, nsName, className);
       const methodPtr = MonoRuntime.find_method()(classPtr, 'CompileToString', 1);
+      const monoStr = MonoRuntime.mono_string()(inputStr);
       const ret = MonoRuntime.call_method(
         methodPtr,
         classPtr,
-        [ inputStr ],
+        [ monoStr ],
       );
 
       const retStr = MonoRuntime.conv_string(ret);
       return JSON.parse(retStr);
     };
 
-    return resolve(compile);
+    return resolve(MonoRuntime.compileInk);
   },
 };
 
@@ -153,7 +154,6 @@ const MonoRuntime = {
   },
   
   call_method(method, this_arg, args) {
-    debugger;
     const args_mem = Module._malloc(args.length * 4);
     const eh_throw = Module._malloc(4);
     for (let ii = 0; ii < args.length; ++ii) {
@@ -169,7 +169,6 @@ const MonoRuntime = {
     Module._free(args_mem);
     Module._free(eh_throw);
 
-    debugger;
     if (eh_res !== 0) {
       const msg = this.conv_string(res);
       throw new Error(msg);
@@ -205,7 +204,7 @@ const WebAssemblyApp = {
 
     this.main_class = MonoRuntime.find_class()(this.main_module, Module.entryPoint.nsName, Module.entryPoint.className);
     if (!this.main_class) {
-      throw new Error('Could not find Program class in main module.');
+      throw new Error(`Could not find ${Module.entryPoint.className} class in main module.`);
     }
 
     this.main_method = MonoRuntime.find_method()(this.main_class, Module.entryPoint.mainMethodName, -1);

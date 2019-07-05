@@ -1,6 +1,6 @@
 {
   "name": "inklecate-wasm",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A package bundling the desktop executable for inklecate, and all its dependencies, into a WebAssembly module executable fully in-browser.",
   "main": "dist/index.js",
   "scripts": {
