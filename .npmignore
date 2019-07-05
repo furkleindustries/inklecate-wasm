@@ -1,2 +1,4 @@
 lib/
-src/mono/*
+src/bin/
+src/mono/
+src/obj/

@@ -1,3 +1,7 @@
+const {
+  compileInk,
+} = require('./compileInk');
+
 /* Adapted from Ooui v0.10.222. */
 const debug = false;
 
@@ -6,7 +10,6 @@ let ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
 let ENVIRONMENT_IS_NODE = typeof process === "object" && typeof require === "function" && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER;
 let ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
-let ___errno_location;
 let _emscripten_replace_memory;
 let _free;
 let _htonl;
@@ -14,28 +17,10 @@ let _htons;
 let _malloc;
 let _memalign;
 let _memset;
-let _mono_background_exec;
-let _mono_print_method_from_ip;
-let _mono_set_timeout_exec;
-let _mono_wasm_assembly_find_class;
-let _mono_wasm_assembly_find_method;
-let _mono_wasm_assembly_load;
-let _mono_wasm_current_bp_id;
-let _mono_wasm_enum_frames;
-let _mono_wasm_get_var_info;
-let _mono_wasm_invoke_method;
-let _mono_wasm_load_runtime;
-let _mono_wasm_set_breakpoint;
-let _mono_wasm_string_from_js;
-let _mono_wasm_string_get_utf8;
 let _ntohs;
-let _wasm_get_stack_base;
-let _wasm_get_stack_size;
 let stackAlloc;
 let stackRestore;
 let stackSave;
-let dynCall_v;
-let dynCall_vi;
 
 const Module = {
   assemblies: [
@@ -60,8 +45,8 @@ const Module = {
 
     Module.FS_createPath('/', 'managed', true, true);
 
-    var pending = 0;
-    this.assemblies.forEach((asmName) => {
+    let pending = 0;
+    this.assemblies.forEach(function (asmName) {
       if (debug) console.log('Loading '  + asmName + '.');
       ++pending;
 
@@ -82,7 +67,7 @@ const Module = {
         );
       }
 
-      prom.then((data) => {
+      prom.then(function (data) {
         const asm = new Uint8Array(data);
         Module.FS_createDataFile('managed/' + asmName, null, asm, true, true, true);
         pending -= 1;
@@ -93,75 +78,16 @@ const Module = {
     });
   },
 
-  bclLoadingDone: (resolve) => {
+  bclLoadingDone: function (resolve) {
     if (debug) console.log('Done loading the Mono Base Class Library.');
     MonoRuntime.init();
-    MonoRuntime.compileInk = (text) => {
-      const returnObj = {
-        text,
-        compilerOutput: [],
-        storyContent: null,
-      };
+    this.compileInk = compileInk.bind(this, Module, MonoRuntime);
+    return resolve(this.compileInk);
+  },
 
-      let failed = false;
-
-      let inklecateResponse;
-
-      const moduleName = Module.entryPoint.assemblyName;
-      const nsName = Module.entryPoint.nsName;
-      const className = Module.entryPoint.className;
-      
-      const oldWrite = process.stdout.write;
-      const cb = function (string) {
-        if (/^(error|warning):?\s/i.test(string)) {
-          returnObj.compilerOutput.push(string);
-        } else {
-          console.warn(string);
-        }
-      };
-
-      process.stdout.write = cb;
-
-      try {
-        /* All of these methods have to be curried to prevent them from either
-         * causing exceptions in Mono before all DLLs are loaded, or appearing
-         * in modules as undefined. */
-        const modulePtr = MonoRuntime.assembly_load()(moduleName);
-        const classPtr = MonoRuntime.find_class()(modulePtr, nsName, className);
-        const methodPtr = MonoRuntime.find_method()(classPtr, 'CompileToString', 1);
-        const inputMonoStr = MonoRuntime.mono_string()(text);
-
-        inklecateResponse = MonoRuntime.call_method(
-          methodPtr,
-          classPtr,
-          [ inputMonoStr ],
-        );
-      } catch (err) {
-        failed = true;
-        const errStr = String(err);
-        if (/^(error|warning):?\s/i.test(errStr)) {
-          returnObj.compilerOutput.push(errStr);
-        }
-      }
-
-      process.stdout.write = oldWrite;
-
-      if (failed) {
-        return returnObj;
-      }
-
-      const storyContentStr = MonoRuntime.conv_string(inklecateResponse);
-      try {
-        returnObj.storyContent = JSON.parse(storyContentStr);
-      } catch (err) {
-        compilerErrors.push('INKLECATE-WASM: The inklecate response could ' +
-          'not be loaded from JSON.');
-      }
-
-      return returnObj;
-    };
-
-    return resolve(MonoRuntime.compileInk);
+  compileInk: function () {
+    throw new Error('The mono environment has not been initialized and ' +
+      'compilation cannot be performed.');
   },
 };
 
@@ -260,7 +186,6 @@ const WebAssemblyApp = {
     }
   },
 };
-
 /* End Ooui.js-derived section. */
 
 const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
