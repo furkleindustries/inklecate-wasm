@@ -85,10 +85,7 @@ const Module = {
     return resolve(this.compileInk);
   },
 
-  compileInk: function () {
-    throw new Error('The mono environment has not been initialized and ' +
-      'compilation cannot be performed.');
-  },
+  compileInk: null,
 };
 
 const MonoRuntime = {
@@ -189,6 +186,10 @@ const WebAssemblyApp = {
 /* End Ooui.js-derived section. */
 
 const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
+  if (typeof WebAssemblyApp.compileInk === 'function') {
+    return resolve(WebAssemblyApp.compileInk);
+  }
+
   var moduleOverrides = {};
   var key;
   for (key in Module) {
