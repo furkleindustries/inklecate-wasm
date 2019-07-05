@@ -1,17 +1,17 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   entry: './src/mono.js',
   target: 'node',
   output: {
     filename: 'main.min.js',
-    libraryTarget: 'commonjs2',
-    path: __dirname + '/src/',
+    libraryTarget: 'umd',
+    path: path.join(__dirname, 'src'),
   },
 
   node: {
-    __dirname: false,
+    __dirname: true,
     fs: 'empty',
     'fs-extra': 'empty',
   },

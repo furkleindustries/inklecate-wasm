@@ -85,7 +85,7 @@ const Module = {
       prom.then((data) => {
         const asm = new Uint8Array(data);
         Module.FS_createDataFile('managed/' + asmName, null, asm, true, true, true);
-        --pending;
+        pending -= 1;
         if (pending === 0) {
           Module.bclLoadingDone(resolve);
         }
@@ -96,22 +96,67 @@ const Module = {
   bclLoadingDone: (resolve) => {
     if (debug) console.log('Done loading the Mono Base Class Library.');
     MonoRuntime.init();
-    MonoRuntime.compileInk = (inputStr) => {
+    MonoRuntime.compileInk = (text) => {
+      const returnObj = {
+        text,
+        compilerOutput: [],
+        storyContent: null,
+      };
+
+      let failed = false;
+
+      let inklecateResponse;
+
       const moduleName = Module.entryPoint.assemblyName;
-      const modulePtr = MonoRuntime.assembly_load()(moduleName);
       const nsName = Module.entryPoint.nsName;
       const className = Module.entryPoint.className;
-      const classPtr = MonoRuntime.find_class()(modulePtr, nsName, className);
-      const methodPtr = MonoRuntime.find_method()(classPtr, 'CompileToString', 1);
-      const monoStr = MonoRuntime.mono_string()(inputStr);
-      const ret = MonoRuntime.call_method(
-        methodPtr,
-        classPtr,
-        [ monoStr ],
-      );
+      
+      const oldWrite = process.stdout.write;
+      const cb = function (string) {
+        if (/^(error|warning):?\s/i.test(string)) {
+          returnObj.compilerOutput.push(string);
+        }
+      };
 
-      const retStr = MonoRuntime.conv_string(ret);
-      return JSON.parse(retStr);
+      process.stdout.write = cb;
+
+      try {
+        /* All of these methods have to be curried to prevent them from either
+         * causing exceptions in Mono before all DLLs are loaded, or appearing
+         * in modules as undefined. */
+        const modulePtr = MonoRuntime.assembly_load()(moduleName);
+        const classPtr = MonoRuntime.find_class()(modulePtr, nsName, className);
+        const methodPtr = MonoRuntime.find_method()(classPtr, 'CompileToString', 1);
+        const inputMonoStr = MonoRuntime.mono_string()(text);
+
+        inklecateResponse = MonoRuntime.call_method(
+          methodPtr,
+          classPtr,
+          [ inputMonoStr ],
+        );
+      } catch (err) {
+        failed = true;
+        const errStr = String(err);
+        if (/^(error|warning):?\s/i.test(errStr)) {
+          returnObj.compilerOutput.push(errStr);
+        }
+      }
+
+      process.stdout.write = oldWrite;
+
+      if (failed) {
+        return returnObj;
+      }
+
+      const storyContentStr = MonoRuntime.conv_string(inklecateResponse);
+      try {
+        returnObj.storyContent = JSON.parse(storyContentStr);
+      } catch (err) {
+        compilerErrors.push('INKLECATE-WASM: The inklecate response could ' +
+          'not be loaded from JSON.');
+      }
+
+      return returnObj;
     };
 
     return resolve(MonoRuntime.compileInk);
@@ -227,7 +272,6 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
   Module["arguments"] = [];
   Module["thisProgram"] = "./this.program";
   Module["quit"] = (function(status, toThrow) {
-    const err = new Error();
     err.code = status;
     return reject(err);
   });
@@ -1014,70 +1058,56 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
     if (!dontAddNull) HEAP8[buffer >> 0] = 0
   }
   var Math_abs = Math.abs;
-  var Math_cos = Math.cos;
-  var Math_sin = Math.sin;
-  var Math_tan = Math.tan;
-  var Math_acos = Math.acos;
-  var Math_asin = Math.asin;
-  var Math_atan = Math.atan;
-  var Math_atan2 = Math.atan2;
-  var Math_exp = Math.exp;
-  var Math_log = Math.log;
-  var Math_sqrt = Math.sqrt;
   var Math_ceil = Math.ceil;
   var Math_floor = Math.floor;
-  var Math_pow = Math.pow;
-  var Math_imul = Math.imul;
-  var Math_fround = Math.fround;
-  var Math_round = Math.round;
   var Math_min = Math.min;
-  var Math_max = Math.max;
-  var Math_clz32 = Math.clz32;
-  var Math_trunc = Math.trunc;
   var runDependencies = 0;
   var runDependencyWatcher = null;
   var dependenciesFulfilled = null;
 
   function getUniqueRunDependency(id) {
-    return id
+    return id;
   }
 
-  function addRunDependency(id) {
-    runDependencies++;
-    if (Module["monitorRunDependencies"]) {
-      Module["monitorRunDependencies"](runDependencies)
+  function addRunDependency() {
+    runDependencies += 1;
+    if (typeof Module.monitorRunDependencies === 'function') {
+      Module.monitorRunDependencies(runDependencies);
     }
   }
 
-  function removeRunDependency(id) {
-    runDependencies--;
-    if (Module["monitorRunDependencies"]) {
-      Module["monitorRunDependencies"](runDependencies)
+  function removeRunDependency() {
+    runDependencies -= 1;
+    if (typeof Module.monitorRunDependencies === 'function') {
+      Module.monitorRunDependencies(runDependencies);
     }
-    if (runDependencies == 0) {
+
+    if (runDependencies === 0) {
       if (runDependencyWatcher !== null) {
         clearInterval(runDependencyWatcher);
-        runDependencyWatcher = null
+        runDependencyWatcher = null;
       }
+
       if (dependenciesFulfilled) {
         var callback = dependenciesFulfilled;
         dependenciesFulfilled = null;
-        callback()
+        callback();
       }
     }
   }
-  Module["preloadedImages"] = {};
-  Module["preloadedAudios"] = {};
-  var dataURIPrefix = "data:application/octet-stream;base64,";
 
+  Module.preloadedImages = {};
+  Module.preloadedAudios = {};
+
+  const dataURIPrefix = 'data:application/octet-stream;base64,';
   function isDataURI(filename) {
-    return String.prototype.startsWith ? filename.startsWith(dataURIPrefix) : filename.indexOf(dataURIPrefix) === 0
+    return filename.indexOf(dataURIPrefix) === 0;;
   }
 
   function integrateWasmJS() {
-    var wasmBinaryFile = "mono.wasm";
-    var wasmTextFile = "mono.wast";
-    var asmjsCodeFile = "mono.temp.asm.js";
+    var wasmBinaryFile = 'mono.wasm';
+    var wasmTextFile = 'mono.wast';
+    var asmjsCodeFile = 'mono.temp.asm.js';
     if (ENVIRONMENT_IS_NODE) {
       const path = require('path');
       wasmBinaryFile = path.join(__dirname, 'mono.wasm');
@@ -1085,107 +1115,124 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       asmjsCodeFile = path.join(__dirname, 'mono.temp.asm.js');
     }
 
-    if (typeof Module["locateFile"] === "function") {
+    if (typeof Module.locateFile === 'function') {
       if (!isDataURI(wasmTextFile)) {
-        wasmTextFile = Module["locateFile"](wasmTextFile)
+        wasmTextFile = Module.locateFile(wasmTextFile);
       }
+
       if (!isDataURI(wasmBinaryFile)) {
-        wasmBinaryFile = Module["locateFile"](wasmBinaryFile)
+        wasmBinaryFile = Module.locateFile(wasmBinaryFile);
       }
+
       if (!isDataURI(asmjsCodeFile)) {
-        asmjsCodeFile = Module["locateFile"](asmjsCodeFile)
+        asmjsCodeFile = Module.locateFile(asmjsCodeFile);
       }
     }
-    var wasmPageSize = 64 * 1024;
-    var info = {
-      "global": null,
-      "env": null,
-      "asm2wasm": {
-        "f64-rem": (function(x, y) {
-          return x % y
-        }),
-        "debugger": (function() {
+
+    const wasmPageSize = 64 * 1024;
+    const info = {
+      env: null,
+      global: null,
+      asm2wasm: {
+        debugger: function() {
           debugger
-        })
+        },
+
+        "f64-rem": function(x, y) {
+          return x % y;
+        },
       },
-      "parent": Module
+
+      parent: Module,
     };
-    var exports = null;
+
+    let exports = null;
 
     function mergeMemory(newBuffer) {
-      var oldBuffer = Module["buffer"];
+      const oldBuffer = Module.buffer;
       if (newBuffer.byteLength < oldBuffer.byteLength) {
-        Module["printErr"]("the new buffer in mergeMemory is smaller than the previous one. in native wasm, we should grow memory here")
+        Module.printErr('The new buffer in mergeMemory is smaller than the ' +
+          'previous one. In native wasm, we should grow memory here.');
       }
-      var oldView = new Int8Array(oldBuffer);
-      var newView = new Int8Array(newBuffer);
+
+      const oldView = new Int8Array(oldBuffer);
+      const newView = new Int8Array(newBuffer);
       newView.set(oldView);
       updateGlobalBuffer(newBuffer);
-      updateGlobalBufferViews()
+      updateGlobalBufferViews();
     }
 
     function fixImports(imports) {
-      return imports
+      return imports;
     }
 
     function getBinary() {
       try {
-        if (Module["wasmBinary"]) {
-          return new Uint8Array(Module["wasmBinary"])
-        }
-        if (Module["readBinary"]) {
-          return Module["readBinary"](wasmBinaryFile)
+        if (Module.wasmBinary) {
+          return new Uint8Array(Module.wasmBinary);
+        } else if (Module.readBinary) {
+          return Module.readBinary(wasmBinaryFile);
         } else {
-          throw "on the web, we need the wasm binary to be preloaded and set on Module['wasmBinary']. emcc.py will do that for you when generating HTML (but not JS)"
+          throw new Error(
+            'On the web, we need the wasm binary to be preloaded and set on ' +
+              'Module[\'wasmBinary\']. emcc.py will do that for you when ' +
+              'generating HTML (but not JS).'
+          );
         }
       } catch (err) {
-        abort(err)
+        abort(err);
       }
     }
 
     function getBinaryPromise() {
-      if (!Module["wasmBinary"] && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) && typeof fetch === "function") {
+      if (!Module.wasmBinary &&
+        (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) && typeof fetch === 'function') {
         return fetch(wasmBinaryFile, {
-          credentials: "same-origin"
+          credentials: 'same-origin',
         }).then((function(response) {
-          if (!response["ok"]) {
-            throw "failed to load wasm binary file at '" + wasmBinaryFile + "'"
+          if (!response.ok) {
+            throw new Error('Failed to load wasm binary file at "' + wasmBinaryFile + '".');
           }
-          return response["arrayBuffer"]()
+
+          return response.arrayBuffer();
         })).catch((function() {
-          return getBinary()
+          return getBinary();
         }))
       }
-      return new Promise((function(resolve, reject) {
-        resolve(getBinary())
-      }))
+
+      return new Promise((function(resolve) {
+        resolve(getBinary());
+      }));
     }
 
-    function doNativeWasm(global, env, providedBuffer) {
+    function doNativeWasm(global, env) {
       if (typeof WebAssembly !== "object") {
-        Module["printErr"]("no native wasm support detected");
+        Module.printErr('No native WASM support detected.');
+        return false;
+      } else if (!(Module.wasmMemory instanceof WebAssembly.Memory)) {
+        Module.printErr('No native WASM Memory in use.');
         return false
       }
-      if (!(Module["wasmMemory"] instanceof WebAssembly.Memory)) {
-        Module["printErr"]("no native wasm Memory in use");
-        return false
-      }
-      env["memory"] = Module["wasmMemory"];
-      info["global"] = {
-        "NaN": NaN,
-        "Infinity": Infinity
+
+      env.memory = Module.wasmMemory;
+
+      info.global = {
+        Infinity,
+        NaN,
       };
-      info["global.Math"] = Math;
-      info["env"] = env;
+
+      info['global.Math'] = Math;
+      info.env = env;
 
       function receiveInstance(instance, module) {
         exports = instance.exports;
         if (exports.memory) mergeMemory(exports.memory);
-        Module["asm"] = exports;
-        Module["usingWasm"] = true;
-        removeRunDependency("wasm-instantiate")
+        Module.asm = exports;
+        Module.usingWasm = true;
+        removeRunDependency();
       }
-      addRunDependency("wasm-instantiate");
+
+      addRunDependency();
       if (Module["instantiateWasm"]) {
         try {
           return Module["instantiateWasm"](info, receiveInstance)
@@ -1659,13 +1706,16 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
     extname: (function(path) {
       return PATH.splitPath(path)[3]
     }),
+
     join: (function() {
       var paths = Array.prototype.slice.call(arguments, 0);
       return PATH.normalize(paths.join("/"))
     }),
+
     join2: (function(l, r) {
-      return PATH.normalize(l + "/" + r)
+      return PATH.normalize(l + '/' + r)
     }),
+
     resolve: (function() {
       var resolvedPath = "",
         resolvedAbsolute = false;
@@ -2057,14 +2107,17 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
             }
           }
         }
+
         delete old_node.parent.contents[old_node.name];
         old_node.name = new_name;
         new_dir.contents[new_name] = old_node;
         old_node.parent = new_dir
       }),
+
       unlink: (function(parent, name) {
         delete parent.contents[name]
       }),
+
       rmdir: (function(parent, name) {
         var node = FS.lookupNode(parent, name);
         for (var i in node.contents) {
@@ -3450,28 +3503,32 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       mode |= 8192;
       return FS.mknod(path, mode, dev)
     }),
-    symlink: (function(oldpath, newpath) {
+
+    symlink: function(oldpath, newpath) {
       if (!PATH.resolve(oldpath)) {
-        throw new FS.ErrnoError(ERRNO_CODES.ENOENT)
+        throw new FS.ErrnoError(ERRNO_CODES.ENOENT);
       }
-      var lookup = FS.lookupPath(newpath, {
-        parent: true
-      });
-      var parent = lookup.node;
+
+      const lookup = FS.lookupPath(newpath, { parent: true });
+      const parent = lookup.node;
       if (!parent) {
-        throw new FS.ErrnoError(ERRNO_CODES.ENOENT)
+        throw new FS.ErrnoError(ERRNO_CODES.ENOENT);
       }
-      var newname = PATH.basename(newpath);
-      var err = FS.mayCreate(parent, newname);
+
+      const newname = PATH.basename(newpath);
+      const err = FS.mayCreate(parent, newname);
       if (err) {
-        throw new FS.ErrnoError(err)
+        throw new FS.ErrnoError(err);
       }
+
       if (!parent.node_ops.symlink) {
-        throw new FS.ErrnoError(ERRNO_CODES.EPERM)
+        throw new FS.ErrnoError(ERRNO_CODES.EPERM);
       }
-      return parent.node_ops.symlink(parent, newname, oldpath)
-    }),
-    rename: (function(old_path, new_path) {
+
+      return parent.node_ops.symlink(parent, newname, oldpath);
+    },
+
+    rename: function (old_path, new_path) {
       var old_dirname = PATH.dirname(old_path);
       var new_dirname = PATH.dirname(new_path);
       var old_name = PATH.basename(old_path);
@@ -3550,24 +3607,23 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       } catch (e) {
         console.log("FS.trackingDelegate['onMovePath']('" + old_path + "', '" + new_path + "') threw an exception: " + e.message)
       }
-    }),
-    rmdir: (function(path) {
-      var lookup = FS.lookupPath(path, {
-        parent: true
-      });
-      var parent = lookup.node;
-      var name = PATH.basename(path);
-      var node = FS.lookupNode(parent, name);
-      var err = FS.mayDelete(parent, name, true);
+    },
+
+    rmdir: function (path) {
+      const lookup = FS.lookupPath(path, { parent: true });
+      const parent = lookup.node;
+      const name = PATH.basename(path);
+      const node = FS.lookupNode(parent, name);
+
+      const err = FS.mayDelete(parent, name, true);
       if (err) {
-        throw new FS.ErrnoError(err)
+        throw new FS.ErrnoError(err);
+      } else if (!parent.node_ops.rmdir) {
+        throw new FS.ErrnoError(ERRNO_CODES.EPERM);
+      } else if (FS.isMountpoint(node)) {
+        throw new FS.ErrnoError(ERRNO_CODES.EBUSY);
       }
-      if (!parent.node_ops.rmdir) {
-        throw new FS.ErrnoError(ERRNO_CODES.EPERM)
-      }
-      if (FS.isMountpoint(node)) {
-        throw new FS.ErrnoError(ERRNO_CODES.EBUSY)
-      }
+
       try {
         if (FS.trackingDelegate["willDeletePath"]) {
           FS.trackingDelegate["willDeletePath"](path)
@@ -3582,50 +3638,52 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
       } catch (e) {
         console.log("FS.trackingDelegate['onDeletePath']('" + path + "') threw an exception: " + e.message)
       }
-    }),
-    readdir: (function(path) {
-      var lookup = FS.lookupPath(path, {
-        follow: true
-      });
-      var node = lookup.node;
+    },
+
+    readdir: function (path) {
+      const lookup = FS.lookupPath(path, { follow: true });
+      const node = lookup.node;
       if (!node.node_ops.readdir) {
-        throw new FS.ErrnoError(ERRNO_CODES.ENOTDIR)
+        throw new FS.ErrnoError(ERRNO_CODES.ENOTDIR);
       }
-      return node.node_ops.readdir(node)
-    }),
-    unlink: (function(path) {
-      var lookup = FS.lookupPath(path, {
-        parent: true
-      });
-      var parent = lookup.node;
-      var name = PATH.basename(path);
-      var node = FS.lookupNode(parent, name);
-      var err = FS.mayDelete(parent, name, false);
+
+      return node.node_ops.readdir(node);
+    },
+
+    unlink: function (path) {
+      const lookup = FS.lookupPath(path, { parent: true });
+      const parent = lookup.node;
+      const name = PATH.basename(path);
+      const node = FS.lookupNode(parent, name);
+      const err = FS.mayDelete(parent, name, false);
+
       if (err) {
-        throw new FS.ErrnoError(err)
+        throw new FS.ErrnoError(err);
+      } else if (!parent.node_ops.unlink) {
+        throw new FS.ErrnoError(ERRNO_CODES.EPERM);
+      } else if (FS.isMountpoint(node)) {
+        throw new FS.ErrnoError(ERRNO_CODES.EBUSY);
       }
-      if (!parent.node_ops.unlink) {
-        throw new FS.ErrnoError(ERRNO_CODES.EPERM)
-      }
-      if (FS.isMountpoint(node)) {
-        throw new FS.ErrnoError(ERRNO_CODES.EBUSY)
-      }
+
       try {
-        if (FS.trackingDelegate["willDeletePath"]) {
-          FS.trackingDelegate["willDeletePath"](path)
+        if (typeof FS.trackingDelegate.willDeletePath === 'function') {
+          FS.trackingDelegate.willDeletePath(path);
         }
       } catch (e) {
-        console.log("FS.trackingDelegate['willDeletePath']('" + path + "') threw an exception: " + e.message)
+        console.log("FS.trackingDelegate.willDeletePath('" + path + "') threw an exception: " + e.message);
       }
+
       parent.node_ops.unlink(parent, name);
       FS.destroyNode(node);
+
       try {
-        if (FS.trackingDelegate["onDeletePath"]) FS.trackingDelegate["onDeletePath"](path)
+        if (typeof FS.trackingDelegate.onDeletePath === 'function') FS.trackingDelegate.onDeletePath(path);
       } catch (e) {
-        console.log("FS.trackingDelegate['onDeletePath']('" + path + "') threw an exception: " + e.message)
+        console.log("FS.trackingDelegate.onDeletePath('" + path + "') threw an exception: " + e.message);
       }
-    }),
-    readlink: (function(path) {
+    },
+
+    readlink: function (path) {
       var lookup = FS.lookupPath(path);
       var link = lookup.node;
       if (!link) {
@@ -3635,7 +3693,8 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
         throw new FS.ErrnoError(ERRNO_CODES.EINVAL)
       }
       return PATH.resolve(FS.getPath(link.parent), link.node_ops.readlink(link))
-    }),
+    },
+
     stat: (function(path, dontFollow) {
       var lookup = FS.lookupPath(path, {
         follow: !dontFollow
