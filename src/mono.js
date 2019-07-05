@@ -115,6 +115,8 @@ const Module = {
       const cb = function (string) {
         if (/^(error|warning):?\s/i.test(string)) {
           returnObj.compilerOutput.push(string);
+        } else {
+          console.warn(string);
         }
       };
 

@@ -11,7 +11,7 @@ module.exports = {
   },
 
   node: {
-    __dirname: true,
+    __dirname: false,
     fs: 'empty',
     'fs-extra': 'empty',
   },
