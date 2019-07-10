@@ -14,7 +14,6 @@ export const compileInk = compileInk = (Module, MonoRuntime, text) => {
   const className = Module.entryPoint.className;
 
   let cb;
-  let oldWrite;
   const oldWrite = process &&
     process.stdout &&
     typeof process.stdout.write === 'function';
