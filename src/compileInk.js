@@ -14,11 +14,12 @@ export const compileInk = (Module, MonoRuntime, text) => {
   const className = Module.entryPoint.className;
 
   let cb;
-  const oldWrite = process &&
+  let oldWrite;
+  const writeExists = process &&
     process.stdout &&
     typeof process.stdout.write === 'function';
 
-  if (writeExists) {
+  if (oldWrite) {
     oldWrite = process.stdout.write;
     cb = function (string) {
       if (/^(error|warning):?\s/i.test(string)) {
