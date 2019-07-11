@@ -3,7 +3,7 @@ import {
 } from './compileInk';
 
 /* Adapted from Ooui v0.10.222. */
-const debug = true;
+const debug = false;
 
 let ENVIRONMENT_IS_WEB = typeof window === "object";
 let ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
