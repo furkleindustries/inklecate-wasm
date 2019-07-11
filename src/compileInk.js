@@ -1,4 +1,4 @@
-export const compileInk = compileInk = (Module, MonoRuntime, text) => {
+export const compileInk = (Module, MonoRuntime, text) => {
   const returnObj = {
     text,
     compilerOutput: [],
@@ -71,5 +71,3 @@ export const compileInk = compileInk = (Module, MonoRuntime, text) => {
 
   return returnObj;
 };
-
-module.exports = { compileInk };

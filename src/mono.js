@@ -1,28 +1,16 @@
-const {
+import {
   compileInk,
-} = require('./compileInk');
+} from './compileInk';
 
 /* Adapted from Ooui v0.10.222. */
-const debug = false;
+const debug = true;
 
 let ENVIRONMENT_IS_WEB = typeof window === "object";
 let ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
 let ENVIRONMENT_IS_NODE = typeof process === "object" && typeof require === "function" && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER;
 let ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
-let _emscripten_replace_memory;
-let _free;
-let _htonl;
-let _htons;
-let _malloc;
-let _memalign;
-let _memset;
-let _ntohs;
-let stackAlloc;
-let stackRestore;
-let stackSave;
-
-const Module = {
+export const Module = {
   assemblies: [
     'ink_compiler.dll',
     'ink-engine-runtime.dll',
@@ -71,7 +59,7 @@ const Module = {
         const asm = new Uint8Array(data);
         Module.FS_createDataFile('managed/' + asmName, null, asm, true, true, true);
         pending -= 1;
-        if (pending === 0) {
+        if (!pending) {
           Module.bclLoadingDone(resolve);
         }
       });
@@ -81,14 +69,19 @@ const Module = {
   bclLoadingDone: function (resolve) {
     if (debug) console.log('Done loading the Mono Base Class Library.');
     MonoRuntime.init();
-    this.compileInk = compileInk.bind(this, Module, MonoRuntime);
-    return resolve(this.compileInk);
+    WebAssemblyApp.compileInk = compileInk.bind(
+      WebAssemblyApp,
+      Module,
+      MonoRuntime,
+    );
+
+    return resolve(WebAssemblyApp.compileInk);
   },
 
   compileInk: null,
 };
 
-const MonoRuntime = {
+export const MonoRuntime = {
   load_runtime() {
     return Module.cwrap('mono_wasm_load_runtime', null, [ 'string', 'number', ]);
   },
@@ -160,7 +153,7 @@ const MonoRuntime = {
   },
 };
 
-const WebAssemblyApp = {
+export const WebAssemblyApp = {
   init() {
     this.findMethods();
     MonoRuntime.call_method(this.main_method, null, []);
@@ -185,7 +178,7 @@ const WebAssemblyApp = {
 };
 /* End Ooui.js-derived section. */
 
-const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
+export const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
   if (typeof WebAssemblyApp.compileInk === 'function') {
     return resolve(WebAssemblyApp.compileInk);
   }
@@ -8057,125 +8050,127 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
     "STACKTOP": STACKTOP,
     "_environ": _environ
   };
+
   var asm = Module["asm"](Module.asmGlobalArg, Module.asmLibraryArg, buffer);
   Module["asm"] = asm;
-  ___errno_location = Module["___errno_location"] = (function() {
+  
+  var ___errno_location = Module["___errno_location"] = (function() {
     return Module["asm"]["___errno_location"].apply(null, arguments)
   });
 
-  _emscripten_replace_memory = Module["_emscripten_replace_memory"] = (function() {
+  var _emscripten_replace_memory = Module["_emscripten_replace_memory"] = (function() {
     return Module["asm"]["_emscripten_replace_memory"].apply(null, arguments)
   });
 
-  _free = Module["_free"] = (function() {
+  var _free = Module["_free"] = (function() {
     return Module["asm"]["_free"].apply(null, arguments)
   });
 
-  _htonl = Module["_htonl"] = (function() {
+  var _htonl = Module["_htonl"] = (function() {
     return Module["asm"]["_htonl"].apply(null, arguments)
   });
 
-  _htons = Module["_htons"] = (function() {
+  var _htons = Module["_htons"] = (function() {
     return Module["asm"]["_htons"].apply(null, arguments)
   });
 
-  _malloc = Module["_malloc"] = (function() {
+  var _malloc = Module["_malloc"] = (function() {
     return Module["asm"]["_malloc"].apply(null, arguments)
   });
 
-  _memalign = Module["_memalign"] = (function() {
+  var _memalign = Module["_memalign"] = (function() {
     return Module["asm"]["_memalign"].apply(null, arguments)
   });
 
-  _memset = Module["_memset"] = (function() {
+  var _memset = Module["_memset"] = (function() {
     return Module["asm"]["_memset"].apply(null, arguments)
   });
 
-  _mono_background_exec = Module["_mono_background_exec"] = (function() {
+  var _mono_background_exec = Module["_mono_background_exec"] = (function() {
     return Module["asm"]["_mono_background_exec"].apply(null, arguments)
   });
 
-  _mono_print_method_from_ip = Module["_mono_print_method_from_ip"] = (function() {
+  var _mono_print_method_from_ip = Module["_mono_print_method_from_ip"] = (function() {
     return Module["asm"]["_mono_print_method_from_ip"].apply(null, arguments)
   });
 
-  _mono_set_timeout_exec = Module["_mono_set_timeout_exec"] = (function() {
+  var _mono_set_timeout_exec = Module["_mono_set_timeout_exec"] = (function() {
     return Module["asm"]["_mono_set_timeout_exec"].apply(null, arguments)
   });
 
-  _mono_wasm_assembly_find_class = Module["_mono_wasm_assembly_find_class"] = (function() {
+  var _mono_wasm_assembly_find_class = Module["_mono_wasm_assembly_find_class"] = (function() {
     return Module["asm"]["_mono_wasm_assembly_find_class"].apply(null, arguments)
   });
 
-  _mono_wasm_assembly_find_method = Module["_mono_wasm_assembly_find_method"] = (function() {
+  var _mono_wasm_assembly_find_method = Module["_mono_wasm_assembly_find_method"] = (function() {
     return Module["asm"]["_mono_wasm_assembly_find_method"].apply(null, arguments)
   });
 
-  _mono_wasm_assembly_load = Module["_mono_wasm_assembly_load"] = (function() {
+  var _mono_wasm_assembly_load = Module["_mono_wasm_assembly_load"] = (function() {
     return Module["asm"]["_mono_wasm_assembly_load"].apply(null, arguments)
   });
 
-  _mono_wasm_current_bp_id = Module["_mono_wasm_current_bp_id"] = (function() {
+  var _mono_wasm_current_bp_id = Module["_mono_wasm_current_bp_id"] = (function() {
     return Module["asm"]["_mono_wasm_current_bp_id"].apply(null, arguments)
   });
 
-  _mono_wasm_enum_frames = Module["_mono_wasm_enum_frames"] = (function() {
+  var _mono_wasm_enum_frames = Module["_mono_wasm_enum_frames"] = (function() {
     return Module["asm"]["_mono_wasm_enum_frames"].apply(null, arguments)
   });
 
-  _mono_wasm_get_var_info = Module["_mono_wasm_get_var_info"] = (function() {
+  var _mono_wasm_get_var_info = Module["_mono_wasm_get_var_info"] = (function() {
     return Module["asm"]["_mono_wasm_get_var_info"].apply(null, arguments)
   });
 
-  _mono_wasm_invoke_method = Module["_mono_wasm_invoke_method"] = (function() {
+  var _mono_wasm_invoke_method = Module["_mono_wasm_invoke_method"] = (function() {
     return Module["asm"]["_mono_wasm_invoke_method"].apply(null, arguments)
   });
 
-  _mono_wasm_load_runtime = Module["_mono_wasm_load_runtime"] = (function() {
+  var _mono_wasm_load_runtime = Module["_mono_wasm_load_runtime"] = (function() {
     return Module["asm"]["_mono_wasm_load_runtime"].apply(null, arguments)
   });
 
-  _mono_wasm_set_breakpoint = Module["_mono_wasm_set_breakpoint"] = (function() {
+  var _mono_wasm_set_breakpoint = Module["_mono_wasm_set_breakpoint"] = (function() {
     return Module["asm"]["_mono_wasm_set_breakpoint"].apply(null, arguments)
   });
 
-  _mono_wasm_string_from_js = Module["_mono_wasm_string_from_js"] = (function() {
+  var _mono_wasm_string_from_js = Module["_mono_wasm_string_from_js"] = (function() {
     return Module["asm"]["_mono_wasm_string_from_js"].apply(null, arguments)
   });
 
-  _mono_wasm_string_get_utf8 = Module["_mono_wasm_string_get_utf8"] = (function() {
+  var _mono_wasm_string_get_utf8 = Module["_mono_wasm_string_get_utf8"] = (function() {
     return Module["asm"]["_mono_wasm_string_get_utf8"].apply(null, arguments)
   });
 
-  _ntohs = Module["_ntohs"] = (function() {
+  var _ntohs = Module["_ntohs"] = (function() {
     return Module["asm"]["_ntohs"].apply(null, arguments)
   });
 
-  _wasm_get_stack_base = Module["_wasm_get_stack_base"] = (function() {
+  var _wasm_get_stack_base = Module["_wasm_get_stack_base"] = (function() {
     return Module["asm"]["_wasm_get_stack_base"].apply(null, arguments)
   });
 
-  _wasm_get_stack_size = Module["_wasm_get_stack_size"] = (function() {
+  var _wasm_get_stack_size = Module["_wasm_get_stack_size"] = (function() {
     return Module["asm"]["_wasm_get_stack_size"].apply(null, arguments)
   });
 
-  stackAlloc = Module["stackAlloc"] = (function() {
+  var stackAlloc = Module["stackAlloc"] = (function() {
     return Module["asm"]["stackAlloc"].apply(null, arguments)
   });
 
-  stackRestore = Module["stackRestore"] = (function() {
+  var stackRestore = Module["stackRestore"] = (function() {
     return Module["asm"]["stackRestore"].apply(null, arguments)
   });
 
-  stackSave = Module["stackSave"] = (function() {
+  var stackSave = Module["stackSave"] = (function() {
     return Module["asm"]["stackSave"].apply(null, arguments)
   });
 
-  dynCall_v = Module["dynCall_v"] = (function() {
+  var dynCall_v = Module["dynCall_v"] = (function() {
     return Module["asm"]["dynCall_v"].apply(null, arguments)
   });
 
-  dynCall_vi = Module["dynCall_vi"] = (function() {
+  var dynCall_vi = Module["dynCall_vi"] = (function() {
     return Module["asm"]["dynCall_vi"].apply(null, arguments)
   });
 
@@ -8279,10 +8274,3 @@ const initializeMonoEnvironment = () => new Promise((resolve, reject) => {
 
 
 });
-
-module.exports = {
-  initializeMonoEnvironment,
-  Module,
-  MonoRuntime,
-  WebAssemblyApp,
-};
