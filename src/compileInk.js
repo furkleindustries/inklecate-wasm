@@ -19,7 +19,7 @@ export const compileInk = (Module, MonoRuntime, text) => {
     process.stdout &&
     typeof process.stdout.write === 'function';
 
-  if (oldWrite) {
+  if (writeExists) {
     oldWrite = process.stdout.write;
     cb = function (string) {
       if (/^(error|warning):?\s/i.test(string)) {
