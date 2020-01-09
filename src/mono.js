@@ -190,6 +190,7 @@ export const initializeMonoEnvironment = () => new Promise((resolve, reject) => 
       moduleOverrides[key] = Module[key]
     }
   }
+
   Module["arguments"] = [];
   Module["thisProgram"] = "./this.program";
   Module["quit"] = (function(status, toThrow) {
@@ -225,6 +226,7 @@ export const initializeMonoEnvironment = () => new Promise((resolve, reject) => 
       ret = nodeFS["readFileSync"](filename);
       return binary ? ret : ret.toString()
     };
+
     Module["readBinary"] = function readBinary(filename) {
       var ret = Module["read"](filename, true);
       if (!ret.buffer) {
@@ -291,7 +293,7 @@ export const initializeMonoEnvironment = () => new Promise((resolve, reject) => 
     }
 
     Module["readAsync"] = function readAsync(url, onload, onerror) {
-      var xhr = new XMLHttpRequest;
+      var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
       xhr.responseType = "arraybuffer";
       xhr.onload = function xhr_onload() {
@@ -302,16 +304,20 @@ export const initializeMonoEnvironment = () => new Promise((resolve, reject) => 
 
         onerror();
       };
+
       xhr.onerror = onerror;
-      xhr.send(null)
+      xhr.send(null);
     };
+
     if (typeof arguments != "undefined") {
-      Module["arguments"] = arguments
+      Module["arguments"] = Array.from(arguments);
     }
+
     Module["setWindowTitle"] = (function(title) {
-      document.title = title
-    })
+      document.title = title;
+    });
   }
+
   Module["print"] = typeof console !== "undefined" ? console.log.bind(console) : typeof print !== "undefined" ? print : null;
   Module["printErr"] = typeof printErr !== "undefined" ? printErr : typeof console !== "undefined" && console.warn.bind(console) || Module["print"];
   Module.print = Module["print"];
@@ -321,6 +327,7 @@ export const initializeMonoEnvironment = () => new Promise((resolve, reject) => 
       Module[key] = moduleOverrides[key]
     }
   }
+
   moduleOverrides = undefined;
   var STACK_ALIGN = 16;
 
